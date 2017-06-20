@@ -5,12 +5,25 @@ But with a simple renaming, it can also be used to lift any file from any genome
 
 ## File structure
 ```
--arraymapLiftOver.py  The python script
--chains/              Home of the chain files
--liftOver             The UCSC liftOver program, Mac version
--logs/                Not in github, but will show up after running the script once.
+- ./arraymapLiftOver.py  The python script
+- ./chains/              Home of the chain files
+- ./liftOver             The UCSC liftOver program
+- ./logs/                Not in github, but will show up after running the script once.
                       Home of all log files.
 ```
+
+## Getting the UCSC liftOver
+This script depends on the UCSC liftOver program, you can find it [here](https://genome-store.ucsc.edu/).
+
+## Getting more chain files
+The chain files for hg18 to hg19, and hg18 to hg38 are provided.
+
+You can get other chain files [here](http://hgdownload.cse.ucsc.edu/downloads.html)
+
+## Python dependency
+The script is in python3.6
+
+It uses packages: click6.7, pandas0.20.1
 
 ## Usage
 ```
