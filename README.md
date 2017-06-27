@@ -4,6 +4,7 @@ This script is to enhance the UCSC genome liftover program.
 Key features are:
 - automate the liftover of any number of files
 - search for the closest liftable position when a point liftover fails
+- liftover both single postions and segments
 - detailed logs 
 - resume from interruption
 
