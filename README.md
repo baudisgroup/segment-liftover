@@ -62,7 +62,7 @@ Options:
 ```
 
 - **input_dir, output_dir** and **chain_file** are required options.
-- if **index_file** is specified, **input_dir** will be ignored.
+- if **index_file** is specified, **input_dir** is still needed, it's used to determine the output folder structures..
 - use **segment** if you have ranged data, see *format* section for more info.
 - use **probe** if you have single position data, see *format* section for more info.
 
