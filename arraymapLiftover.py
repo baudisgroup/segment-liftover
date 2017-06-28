@@ -524,10 +524,7 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
         if os.path.isdir(input_dir) == False:
             sys.exit('Error: input direcotry does not exist.')
     else:
-        if index_file:
-            pass
-        else:
-            sys.exit('Error: input_dir, out_dir and genome_editions are required. Check --help for more information.')
+        sys.exit('Error: input_dir, out_dir and genome_editions are required. Check --help for more information.')
 
 
 
