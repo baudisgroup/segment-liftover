@@ -157,15 +157,30 @@ def solveUnmappables(fin, chain, remap):
                 # use the first mapping result
                 else:
                     with open('./tmp/remap_new.bed', 'r') as f:
-                        while True:
-                            line = f.readline()
+                        next(f)
+                        for line in f:
                             line = line.split('\t')
-                            new_chro = line[0]
-                            new_pos = int(line[1])
+                            if len(line) > 1:
+                                new_chro = line[0]
+                                new_pos = int(line[1])
                             if new_chro == chro:
                                 remap[key] = [new_chro, new_pos, 'mapped']
                                 counter += 1
                                 break
+
+
+
+
+                        # while True:
+                        #     line = f.readline()
+                        #     line = line.split('\t')
+                        #     if len(line) > 1:
+                        #         new_chro = line[0]
+                        #         new_pos = int(line[1])
+                        #         if new_chro == chro:
+                        #             remap[key] = [new_chro, new_pos, 'mapped']
+                        #             counter += 1
+                        #             break
 
 
             positions.append([new_chro, new_pos, name])
@@ -294,6 +309,7 @@ def convertSegments(fin, fo, chain, remap):
         dd = pd.merge(starts_new,ends_new,how='inner', on=['name'], suffixes=['_s', '_e'])
         df_new = pd.merge(dd, df, how='left', on=['name'],suffixes=['_new','_old'])
         #df_new.drop(['chr', 'name', 'start_old', 'stop_old'], axis=1, inplace=True)
+
         
         #Generate new columns for error checking
         df_new['chr_cmp'] = (df_new.chr_s == df_new.chr_e)
@@ -317,6 +333,7 @@ def convertSegments(fin, fo, chain, remap):
         df_new.rename(columns={'start_new':'start', 'stop_new':'stop'}, inplace=True)
         df_new = df_new[col_names]
         os.makedirs(os.path.dirname(fo), exist_ok=True)
+        print(fo)
         df_new.to_csv(fo, sep='\t', index=False, float_format='%.4f') 
                 
         logger.info('Finished\n')
@@ -702,7 +719,7 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
                 print('\t{}'.format(i), end='', file=fo)
             print('', file=fo)
     # Remove temp files.
-    subprocess.run('rm *.bed *.unmapped ./tmp/*.*  &>/dev/null', shell=True)
+    # subprocess.run('rm *.bed *.unmapped ./tmp/*.*  &>/dev/null', shell=True)
 
     print('Done!')
 
