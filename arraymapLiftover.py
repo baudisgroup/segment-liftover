@@ -111,8 +111,8 @@ def solveUnmappables(fin, chain, remap):
         # number of items
         num_pos = df.shape[0]
         counter = 0
-        cmd = './liftOver'+ ' ./tmp/remap.bed ' + chain + ' ./tmp/remap_new.bed'+ \
-            ' ./tmp/remap.unmapped' + ' &>/dev/null'
+        cmd = ['./liftOver', './tmp/remap.bed', chain, './tmp/remap_new.bed', 
+            './tmp/remap.unmapped']
 
         
         
@@ -146,7 +146,7 @@ def solveUnmappables(fin, chain, remap):
                         print('{}\t{}\t{}\t{}'.format(chro, start+i*step_size, start+i*step_size+1, name), file=f)
                         print('{}\t{}\t{}\t{}'.format(chro, start-i*step_size, start-i*step_size+1, name), file=f)
 
-                return_info = subprocess.run(cmd, shell=True)
+                return_info = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 
                 # check running result
                 if return_info.returncode != 0 :
@@ -262,9 +262,9 @@ def convertSegments(fin, fo, chain, remap):
     
     
         #Convert the start coordinates
-        cmd = './liftOver' + ' ./tmp/starts.bed ' + chain + ' ./tmp/starts_new.bed' + \
-            ' ./tmp/starts.unmapped' + ' &>/dev/null'
-        return_info = subprocess.run(cmd, shell=True)
+        cmd = ['./liftOver' , './tmp/starts.bed' , chain , './tmp/starts_new.bed' ,
+            './tmp/starts.unmapped']
+        return_info = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if return_info.returncode != 0 :
             logger.error('sh: %s', cmd)
             raise RuntimeError(cmd)
@@ -283,9 +283,9 @@ def convertSegments(fin, fo, chain, remap):
            
        
         #Convert the end coordinates
-        cmd = './liftOver' + ' ./tmp/ends.bed ' + chain +  ' ./tmp/ends_new.bed' + \
-            ' ./tmp/ends.unmapped' + ' &>/dev/null'
-        return_info = subprocess.run(cmd, shell=True)
+        cmd = ['./liftOver' , './tmp/ends.bed' , chain ,  './tmp/ends_new.bed' ,
+            './tmp/ends.unmapped' ]
+        return_info = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if return_info.returncode != 0 :
             logger.error('sh: %s', cmd)
             raise RuntimeError(cmd)
@@ -333,7 +333,7 @@ def convertSegments(fin, fo, chain, remap):
         df_new.rename(columns={'start_new':'start', 'stop_new':'stop'}, inplace=True)
         df_new = df_new[col_names]
         os.makedirs(os.path.dirname(fo), exist_ok=True)
-        print(fo)
+        # print(fo)
         df_new.to_csv(fo, sep='\t', index=False, float_format='%.4f') 
                 
         logger.info('Finished\n')
@@ -428,9 +428,9 @@ def convertProbes(fin, fo, chain, remap):
 
     
         #Convert the probe coordinates
-        cmd = './liftOver' + ' ./tmp/probes.bed ' + chain + ' ./tmp/probes_new.bed' + \
-            ' ./tmp/probes.unmapped' + ' &>/dev/null'
-        return_info = subprocess.run(cmd, shell=True)
+        cmd = ['./liftOver' , './tmp/probes.bed' , chain , './tmp/probes_new.bed' ,
+            './tmp/probes.unmapped']
+        return_info = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if return_info.returncode != 0 :
             logger.error('sh: %s', cmd)
             raise RuntimeError(cmd)
