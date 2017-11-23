@@ -27,7 +27,7 @@ The chain files for hg18 to hg19, hg18 to hg38 and hg19 to hg38 are provided.
 You can get other chain files [here](http://hgdownload.cse.ucsc.edu/downloads.html)
 
 ### Python dependency
-The script is deveoped in python3.6, it should work for any verison later than python3.5
+The script is deveoped in python3.6, it should work for any verison later than python3.5. 
 With minor modifications, it can also work for verison eralier than 3.5
 
 It uses packages: click6.7, pandas0.20.1
