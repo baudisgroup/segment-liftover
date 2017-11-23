@@ -30,7 +30,7 @@ You can get other chain files [here](http://hgdownload.cse.ucsc.edu/downloads.ht
 The script is deveoped in python3.6, it should work for any verison later than python3.5. 
 With minor modifications, it can also work for verison eralier than 3.5
 
-It uses packages: click6.7, pandas0.20.1
+Packages: click6.7, pandas0.20.1
 
 ## Usage
 Tyical usage:
