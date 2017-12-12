@@ -1,12 +1,33 @@
-# genome-liftover
-This script is to enhance the UCSC genome liftover program. 
+# Segment-liftover
+Converting genome coordinates between different genome assemblies is a common task. Services and tools such as UCSC Liftover, NCBI Remap and CrossMap are avaible to perform conversion. When converting a genome assembly, all tools will break the original segment into a few smaller segments, if the segment is not countinues anymore in the new genome edtion. However, in some circumstances such as copy number studies, the integrity of the segment needs to be kept.
 
-Key features are:
-- automate the liftover of any number of files
-- search for the closest liftable position when a point liftover fails
-- liftover both single positions and segments
-- detailed logs 
+The segmentLiftover is a python program that can convert segments between genome assemblies without breaking them apart. Furthermore, it also tries to re-convert by approximation when preceise conversion fails.
+
+Key features:
+- convert segments in whole
+- do approximate conversion when direct conversion fails
+- batch process any number of files
+- automatic folder traversal and file discovery
+- detailed logs
 - resume from interruption
+- work for both segment and probe data
+
+## Program dependency
+The segmentLiftover depends on the UCSC Liftover program to work.You can find it [here](https://genome-store.ucsc.edu/).
+Please note, Liftover is only free for non-commercial use. Desptie the inconvenience of liscencing, Liftover offers some very convenient features:
+- it is a stand-along command-line tool
+- it can convert assemblies of any species, even between specieses
+- it runs locally and does not require network
+
+## How to install
+
+## How to use
+
+### Quick start
+Tyical usage:
+```
+>python3 segmentLiftover.py -i /Volumes/data/hg18/ -o /Volumes/data/hg19/ -c hg18ToHg19 -si segments.tsv -so seg.tsv
+```
 
 ### File structure
 ```
@@ -33,10 +54,7 @@ With minor modifications, it can also work for verison eralier than 3.5
 Packages: click6.7, pandas0.20.1
 
 ## Usage
-Tyical usage:
-```
->python3 arraymapLiftover.py -i /Volumes/data/hg18/ -o /Volumes/data/hg19/ -c hg18ToHg19.over.chain -si segments.tsv -so seg.tsv -pi probes.tsv -po prob.tsv 
-```
+
 General usage:
 ```
 >python3 arraymapLiftover.py [OPTIONS]
