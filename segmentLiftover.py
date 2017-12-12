@@ -1,9 +1,11 @@
 import click
 import sys
 import pandas as pd
+import math
 import subprocess
 import logging
 import os
+import re
 
 
 ##########################################################################
@@ -12,8 +14,9 @@ import os
 #
 ##########################################################################
 
-log_dir = os.path.abspath('./logs')
-chain_dir = os.path.abspath('./chains')
+log_dir = 'logs/'
+chain_dir = 'chains/'
+#chain_dir = os.path.abspath('./chains')
 
 # stores remapped positions for fast re-access
 # key = chro_pos, value = [chro, pos, flat=mapped/unmapped]
@@ -60,6 +63,7 @@ handler = logging.FileHandler(os.path.join(log_dir,'unmapped.log'), mode='w')
 handler.setFormatter(logging.Formatter('%(message)s'))
 unmapped_logger.setLevel(logging.INFO)
 unmapped_logger.addHandler(handler)
+unmapped_logger.info('{}\t{}\t{}\t{}\t{}\t{}'.format('chromosome','start','end','same_chr','length_ratio','file'))
 
 
 
@@ -138,7 +142,7 @@ def solveUnmappables(fin, chain, remap):
                 if flag == 'mapped':
                     counter += 1
                 else:
-                    logger.warning('(1) Remapping failed: ' + str([chro, start, name]))
+                    logger.warning('Failed to remap (cached): ' + str([chro, start, name]))
             # do a stepwise mapping
             else:
                 with open('./tmp/remap.bed', 'w') as f:
@@ -152,7 +156,7 @@ def solveUnmappables(fin, chain, remap):
                 if return_info.returncode != 0 :
                     logger.warning('Remapping failed, cmd error: ' + str([chro, start, name]))
                 elif os.path.getsize('./tmp/remap_new.bed') == 0 :
-                    logger.warning('(2) Remapping failed: ' + str([chro, start, name]))
+                    logger.warning('Fail to remap (new): ' + str([chro, start, name]))
                     remap[key] = [new_chro, new_pos, 'unmapped']
                 # use the first mapping result
                 else:
@@ -185,12 +189,12 @@ def solveUnmappables(fin, chain, remap):
 
             positions.append([new_chro, new_pos, name])
             
-        logger.info('Remapped %i/%i unmapped positions.', counter, num_pos)
+        logger.info('Remapped %i/%i positions.', counter, num_pos)
         return positions
     
     
     except Exception as e:
-        logger.exception('Failed: %s', fin)
+        logger.exception('Failure in remapping: %s', fin)
         return -1
 
 
@@ -218,7 +222,7 @@ def solveUnmappables(fin, chain, remap):
 # Return: 
 # 0 or -1
 #
-def convertSegments(fin, fo, chain, remap):
+def convertSegments(fin, fo, chain, remap, remap_flag=True, new_colnames = []):
     
     logger = logging.getLogger('liftover')
     logger.info('Processing segment:\t%s', fin)
@@ -226,10 +230,15 @@ def convertSegments(fin, fo, chain, remap):
     try:
 
         df = pd.read_table(fin, sep='\t', low_memory=False)
+        
+        # save original column name
+        original_colnames = df.columns.values.tolist()
+        
+        #Rename columns for processing
         df.rename(columns={df.columns[0]:'sample_id', df.columns[1]:'chromosome', df.columns[2]:'start', 
                            df.columns[3]:'stop'}, inplace=True)
        
-        #Save column names for later restore.
+        #Save column names for order restore after processing.
         col_names = df.columns
         
         #Generate new columns for processing
@@ -275,7 +284,7 @@ def convertSegments(fin, fo, chain, remap):
         del starts_new['stop']
 
         #Remap unmapped start positions
-        if os.path.getsize('./tmp/starts.unmapped') >0:
+        if (remap_flag == True) and (os.path.getsize('./tmp/starts.unmapped') >0):
             starts_remap = solveUnmappables('./tmp/starts.unmapped', chain, remap)
             starts_remap = pd.DataFrame(starts_remap, columns=starts_new.columns)
             #Merge start positions
@@ -297,7 +306,7 @@ def convertSegments(fin, fo, chain, remap):
 
 
         #Remap unmapped end positions
-        if os.path.getsize('./tmp/ends.unmapped') >0:
+        if (remap_flag == True) and (os.path.getsize('./tmp/ends.unmapped') >0):
             ends_remap = solveUnmappables('./tmp/ends.unmapped', chain, remap)
             ends_remap = pd.DataFrame(ends_remap, columns=ends_new.columns)
             #Merge end positions
@@ -328,10 +337,19 @@ def convertSegments(fin, fo, chain, remap):
                 row['start_old'],row['stop_old'],row['chr_cmp'],row['pos_cmpRatio'],fin))
                 
         
-        #Rename and rearrange columns back to the original format
+        #Rename and rearrange columns back to the original order
         df_new = df_new[~df_new.name.isin(df_mis.name)]
         df_new.rename(columns={'start_new':'start', 'stop_new':'stop'}, inplace=True)
         df_new = df_new[col_names]
+        
+        #restore column names
+        if len(new_colnames) > 0:
+            df_new.rename(columns={'sample_id':new_colnames[0], 'chromosome':new_colnames[1],
+                                   'start':new_colnames[2], 'stop':new_colnames[3]}, inpace=True)
+        else:
+            df_new.columns = original_colnames
+            
+        
         os.makedirs(os.path.dirname(fo), exist_ok=True)
         # print(fo)
         df_new.to_csv(fo, sep='\t', index=False, float_format='%.4f') 
@@ -342,7 +360,7 @@ def convertSegments(fin, fo, chain, remap):
         return 0
     
     except Exception as e:
-        logger.exception('Failed: %s', fin)
+        logger.exception('Failure in segment: %s', fin)
         return -1
         
     
@@ -370,7 +388,7 @@ def convertSegments(fin, fo, chain, remap):
 # Return: 
 # 0 or -1
 #
-def convertProbes(fin, fo, chain, remap):
+def convertProbes(fin, fo, chain, remap, remap_flag=True, new_colnames=[]):
     
     logger = logging.getLogger('liftover')
     logger.info('Processing probe:\t%s', fin)
@@ -395,12 +413,13 @@ def convertProbes(fin, fo, chain, remap):
         if df.columns.size < 4:
             df.insert(0, 'probe_id', 'ID_' + df.index.astype(str))
             #df['probe_id'] = 'ID_' + df.index.astype(str)
-        
+
+        # save original column name
+        original_colnames = df.columns.values.tolist()        
         
         df.rename(columns={df.columns[0]:'probe_id', df.columns[1]:'chromosome',
-                           df.columns[2]:'position'}, inplace=True)
-
-
+                           df.columns[2]:'position'}, inplace=True)        
+        
         #Save column names for later restore.
         col_names = df.columns
         
@@ -442,7 +461,7 @@ def convertProbes(fin, fo, chain, remap):
 
 
         #Remap the unmapped
-        if os.path.getsize('./tmp/probes.unmapped') >0:
+        if (remap_flag == True) and (os.path.getsize('./tmp/probes.unmapped') >0):
             probes_remap = solveUnmappables('./tmp/probes.unmapped', chain, remap)
             probes_remap = pd.DataFrame(probes_remap, columns=probes_new.columns)
             #Merage new positions
@@ -469,6 +488,13 @@ def convertProbes(fin, fo, chain, remap):
         df_new.rename(columns={'position_new':'position'}, inplace=True)
         df_new = df_new[col_names]
         
+        #restore column names
+        if len(new_colnames) > 0:
+            df_new.rename(columns={'probe_id':new_colnames[0], 'chromosome':new_colnames[1],
+                                   'position':new_colnames[2]}, inpace=True)
+        else:
+            df_new.columns = original_colnames
+        
         os.makedirs(os.path.dirname(fo), exist_ok=True)
         df_new.to_csv(fo, sep='\t', index=False, float_format='%.4f') 
         
@@ -478,7 +504,7 @@ def convertProbes(fin, fo, chain, remap):
         return 0
     
     except Exception as e:
-        logger.exception('Failed: %s', fin)
+        logger.exception('Failure in probe: %s', fin)
         return -1
         
 
@@ -505,12 +531,16 @@ def convertProbes(fin, fo, chain, remap):
 @click.option('-so', '--segment_output_file', help='Specify the segment output file name.')
 @click.option('-pi', '--probe_input_file', help='Specify the probe input file name.')
 @click.option('-po', '--probe_output_file', help='Specify the probe output file name.')
-@click.option('--step_size', 'step_size_usr', default=0, help='The step size of remapping.')
-@click.option('--steps', 'steps_usr', default=0, help='The number of steps of remapping.')
+@click.option('--step_size', 'step_size_usr', default=400, help='The step size of remapping (in bases, default:400).')
+@click.option('--range', 'search_range', default=10, help='The range of remapping search (in kilo bases, defualt:10).')
 @click.option('-x', '--index_file', type=click.File('r'), help='Specify an indexing file cotaining file paths.')
 @click.option('-r', '--remap_file', type=click.File('r'), help='Specify an remapping list file.')
+@click.option('--no_remapping', is_flag=True, help='No remapping, only original liftover.')
+@click.option('--new_segment_header', nargs=4, type=str, help='Specify 4 new column names for new segment files.' )
+@click.option('--new_probe_header', nargs=3, type=str, help='Specify 3 new column names for new probe files.')
 def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segment_input_file, segment_output_file, 
-        probe_input_file, probe_output_file, step_size_usr, steps_usr, index_file, remap_file):
+        probe_input_file, probe_output_file, step_size_usr, search_range, index_file, remap_file, no_remapping,
+        new_segment_header, new_probe_header):
 
 
 
@@ -525,15 +555,37 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
         sys.exit('Log files cleaned up.')
 
     # Check params
-    if ((segment_input_file == None and segment_output_file !=None) or \
-        (segment_input_file != None and segment_output_file ==None)) :
-        sys.exit('Error: Must specify both input & output names for semgent or probe file.') 
-    if ((probe_input_file == None and probe_output_file != None) or \
-        (probe_input_file != None and probe_output_file == None)) :
-        sys.exit('Error: Must specify both input & output names for semgent or probe file.') 
-    if segment_input_file == None and segment_output_file ==None and \
-        probe_input_file == None and probe_output_file == None :
-        sys.exit('Error: Must specify input and output file names.')
+#    if ((segment_input_file == None and segment_output_file !=None) or \
+#        (segment_input_file != None and segment_output_file ==None)) :
+#        sys.exit('Error: Must specify both input & output names for semgent or probe file.') 
+#    if ((probe_input_file == None and probe_output_file != None) or \
+#        (probe_input_file != None and probe_output_file == None)) :
+#        sys.exit('Error: Must specify both input & output names for semgent or probe file.') 
+#    if segment_input_file == None and segment_output_file ==None and \
+#        probe_input_file == None and probe_output_file == None :
+#        sys.exit('Error: Must specify input and output file names.')
+    
+    #check input & output file 
+    if (segment_input_file == None) and (probe_input_file == None):
+        sys.exit('Error: Must specify at least one input file name for semgent or probe.') 
+        
+    if segment_input_file:
+        try:
+            seg_pattern = re.compile(segment_input_file)
+        except re.error:
+            sys.exit('{} is not a valid regular expression.'.format(segment_input_file))
+        if segment_output_file == None:
+            segment_output_file = segment_input_file
+    
+    if probe_input_file:
+        try:
+            pro_pattern = re.compile(probe_input_file)
+        except re.error:
+            sys.exit('{} is not a valid regular expression.'.format(probe_input_file))
+        if segment_output_file == None:
+            probe_output_file = probe_input_file  
+    
+
 
 
     # Validate input_dir
@@ -541,9 +593,10 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
         if os.path.isdir(input_dir) == False:
             sys.exit('Error: input direcotry does not exist.')
     else:
-        sys.exit('Error: input_dir, out_dir and genome_editions are required. Check --help for more information.')
+        sys.exit('Error: input_dir, out_dir, chain_file and a input file are required. Check --help for more information.')
 
-
+    if output_dir == None:
+        sys.exit('Error: input_dir, out_dir, chain_file and a input file are required. Check --help for more information.')
 
 
     # Validate output_dir
@@ -561,21 +614,30 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
     # elif genome_editions == '18to38':
     #     chainfile = chainfile_18to38
 
-
+    default_chains = ['hg18ToHg19', 'hg18ToHg38', 'hg19ToHg38','hg38ToHg19','hg19ToHg18']
     if not chain_file:
         sys.exit('Error: please specify a chain file.')
-    elif os.path.isfile( os.path.join(chain_dir, chain_file) ) == False:
+    elif chain_file in default_chains:
+        chain_file = chain_file + '.over.chain.gz'
+        chain_file = os.path.join(os.path.dirname(__file__), chain_dir, chain_file )
+    if os.path.isfile( chain_file ) == False:
         sys.exit('Error: chainfile does not exist.')
-    else:
-        chain_file = os.path.join(chain_dir, chain_file)
+
 
     # Assign step value
-    if step_size_usr != 0 :
+    global step_size, steps
+    if step_size_usr > 0 :
         step_size = step_size_usr
-    if steps_usr >0 :
-        steps = steps_usr
+    else:
+        sys.exit('step_size must be greater than 0')
+        
+    if search_range >0 :
+        steps = math.ceil(search_range*1000/step_size)
+    else:
+        sys.exit('range must be greater than 0')
 
-
+    # convert no_remapping flg
+    remap_flag = not no_remapping
 
 
     #########   Print input options   ############
@@ -590,9 +652,12 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
     print('probe_input_file: {}'.format(probe_input_file) )
     print('probe_output_file: {}'.format(probe_output_file) )
     print('setp_size: {}'.format(step_size_usr) )
-    print('steps: {}'.format( steps_usr ) )
+    print('range: {}'.format( search_range ) )
     print('index_file: {}'.format( index_file.name if index_file else index_file ) )
     print('remap_file: {}'.format( remap_file.name if remap_file else remap_file) )
+    print('no_remapping: {}'.format( no_remapping ))
+    print('new_segment_header: {}'.format( new_segment_header))
+    print('new_probe_header: {}'.format( new_probe_header))
     print()
 
 
@@ -625,18 +690,30 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
                 if test_counter > test_mode:
                     break
         print('Index file detected, recovered from {}'.format(index_file.name))
+        print('detected {} files.'.format(len(file_list)))
     #Traverse directories to index all segments.tab and CNprobes.tab files.
     else:
         print('Indexing files to process, this may take some time.')
+        seg_counter = 0
+        pro_counter = 0
         with click.progressbar(os.walk(input_dir), label='Be patient: ', fill_char=click.style('*', fg='red')) as bar:
+
 
             # File traverse
             for root, subdirs, files in bar:
                 for f in files:
-                    if (f == segment_input_file) or (f == probe_input_file):
+#                    if (f == segment_input_file):
+                    if (segment_input_file !=None) and  (seg_pattern.match(f)):
                         path = os.path.join(root,f)
                         file_list.append(path)
-                        # test mode
+                        seg_counter += 1
+#                    elif(f == probe_input_file):
+                    elif (probe_input_file !=None) and (pro_pattern.match(f)):
+                        path = os.path.join(root,f)
+                        file_list.append(path)
+                        pro_counter += 1
+                
+                # test mode
                 if test_mode:
                     test_counter += 1
                     if test_counter > test_mode:
@@ -650,7 +727,7 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
             # Terminate for file_indexing mode
             if file_indexing:
                 sys.exit('Indexing file created.')
-
+        print('detected {} segment files and {} probe files.\n'.format(seg_counter, pro_counter))
 
 
 
@@ -677,6 +754,7 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
             remapped_list[key] = [chro, pos, flag]
         print('Remapped positions detected, recovered from {}'.format(remap_file.name))
 
+        
 
 
 
@@ -687,32 +765,54 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
 
 
 
-
-
+    # counters for display
+    seg_succ_counter = 0
+    seg_fail_counter = 0
+    pro_succ_counter = 0
+    pro_fail_counter = 0
     #########   Liftover   ############
     with click.progressbar(file_list, label='Lifting: ', fill_char=click.style('*', fg='green')) as bar:
+
+        
         for f in bar:
             #generate output path
             rel_path = os.path.relpath(os.path.dirname(f), input_dir)
             #out_path = os.path.join(output_dir, rel_path, os.path.basename(f))
 
-            
-            
 
-            if os.path.basename(f) == segment_input_file:
+            
+            # lift over
+#            if os.path.basename(f) == segment_input_file:
+            if (segment_input_file !=None) and  (seg_pattern.match(os.path.basename(f))):
                 segment_out_path = os.path.join(output_dir, rel_path, segment_output_file)
-                code = convertSegments(f, segment_out_path, chain_file,remapped_list)
-            elif os.path.basename(f) == probe_input_file:
+                code = convertSegments(f, segment_out_path, chain_file,remapped_list, 
+                                       remap_flag, new_segment_header)
+                if code == 0:
+                    seg_succ_counter += 1
+                else:
+                    seg_fail_counter += 1
+#            elif os.path.basename(f) == probe_input_file:
+            elif (probe_input_file !=None) and (pro_pattern.match(os.path.basename(f))):
                 probe_out_path = os.path.join(output_dir, rel_path, probe_output_file)
-                code = convertProbes(f, probe_out_path, chain_file, remapped_list)
+                code = convertProbes(f, probe_out_path, chain_file, remapped_list, 
+                                     remap_flag, new_probe_header)
+                if code == 0:
+                    pro_succ_counter += 1
+                else:
+                    pro_fail_counter += 1
             else:
                 print('Unknown file type: ' + f)
                 logger.error('Unknown file type: ' + f)
-        
+    
+    if (seg_succ_counter + seg_fail_counter) >0:
+        print('Segments: {} successful, {} failed.'.format(seg_succ_counter, seg_fail_counter ))
+    if (pro_succ_counter + pro_fail_counter) >0:
+        print('Probes: {} successful, {} failed'.format(pro_succ_counter, pro_fail_counter))
 
 
     # Save the remapped_list for reuse
     with open('./logs/remapped.log', 'w') as fo:
+        print('{}\t{}\t{}\t{}'.format('name', 'new_chr', 'new_pos', 'result'), file=fo)
         for k,v in remapped_list.items():
             print(k, end='', file=fo)
             for i in v:
