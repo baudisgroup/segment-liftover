@@ -38,27 +38,29 @@ Options:
   -i, --input_dir TEXT            The directory to start processing.
   -o, --output_dir TEXT           The directory to write new files.
   -c, --chain_file TEXT           Specify the chain file name.
-  --clean                         Clean up log files.
-  -t, --test_mode INTEGER RANGE   Only process a limited number of files.
-  -f, --file_indexing             Only generate the index file.
   -si, --segment_input_file TEXT  Specify the segment input file name.
   -so, --segment_output_file TEXT
                                   Specify the segment output file name.
   -pi, --probe_input_file TEXT    Specify the probe input file name.
   -po, --probe_output_file TEXT   Specify the probe output file name.
+  -l, --liftover TEXT             Specify the location of the UCSC liftover
+                                  program.
+  -t, --test_mode INTEGER RANGE   Only process a limited number of files.
+  -f, --file_indexing             Only generate the index file.
+  -x, --index_file FILENAME       Specify an index file containing file paths.
+  -r, --remap_file FILENAME       Specify an remapping list file.
   --step_size INTEGER             The step size of remapping (in bases,
                                   default:400).
   --range INTEGER                 The range of remapping search (in kilo
                                   bases, default:10).
-  -x, --index_file FILENAME       Specify an index file containing file paths.
-  -r, --remap_file FILENAME       Specify an remapping list file.
   --no_remapping                  No remapping, only original liftover.
   --new_segment_header TEXT...    Specify 4 new column names for new segment
                                   files.
   --new_probe_header TEXT...      Specify 3 new column names for new probe
                                   files.
   --resume TEXT...                Specify a index file and a progress file to
-                                  resume               an interrupted job.
+                                  resume an interrupted job.
+  --clean                         Clean up log files.
   --help                          Show this message and exit.
 ```
 

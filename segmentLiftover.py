@@ -19,6 +19,7 @@ startTime = datetime.now()
 
 log_dir = 'logs/'
 chain_dir = 'chains/'
+liftover_path = './liftOver'
 #chain_dir = os.path.abspath('./chains')
 
 # stores remapped positions for fast re-access
@@ -146,7 +147,7 @@ def solveUnmappables(fin, chain, remap):
         # number of items
         num_pos = df.shape[0]
         counter = 0
-        cmd = ['./liftOver', './tmp/remap.bed', chain, './tmp/remap_new.bed', 
+        cmd = [liftover_path, './tmp/remap.bed', chain, './tmp/remap_new.bed', 
             './tmp/remap.unmapped']
 
         
@@ -307,7 +308,7 @@ def convertSegments(fin, fo, chain, remap, remap_flag=True, new_colnames = []):
     
     
         #Convert the start coordinates
-        cmd = ['./liftOver' , './tmp/starts.bed' , chain , './tmp/starts_new.bed' ,
+        cmd = [liftover_path , './tmp/starts.bed' , chain , './tmp/starts_new.bed' ,
             './tmp/starts.unmapped']
         return_info = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if return_info.returncode != 0 :
@@ -334,7 +335,7 @@ def convertSegments(fin, fo, chain, remap, remap_flag=True, new_colnames = []):
             starts_remap = pd.DataFrame(columns=starts_new.columns)
        
         #Convert the end coordinates
-        cmd = ['./liftOver' , './tmp/ends.bed' , chain ,  './tmp/ends_new.bed' ,
+        cmd = [liftover_path , './tmp/ends.bed' , chain ,  './tmp/ends_new.bed' ,
             './tmp/ends.unmapped' ]
         return_info = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if return_info.returncode != 0 :
@@ -397,6 +398,8 @@ def convertSegments(fin, fo, chain, remap, remap_flag=True, new_colnames = []):
         if remap_flag == True:
             uniqe_remapped = pd.merge(starts_remap, ends_remap, how='outer', on=['name'])
             remapped_seg += uniqe_remapped.shape[0]
+        else:
+            uniqe_remapped = pd.DataFrame()
         lifted_seg = lifted_seg + this_total - unmapped - uniqe_remapped.shape[0]
         
         #Invoke unmapped logger
@@ -415,7 +418,7 @@ def convertSegments(fin, fo, chain, remap, remap_flag=True, new_colnames = []):
         #restore column names
         if len(new_colnames) > 0:
             df_new.rename(columns={'sample_id':new_colnames[0], 'chromosome':new_colnames[1],
-                                   'start':new_colnames[2], 'stop':new_colnames[3]}, inpace=True)
+                                   'start':new_colnames[2], 'stop':new_colnames[3]}, inplace=True)
         else:
             df_new.columns = original_colnames
             
@@ -521,7 +524,7 @@ def convertProbes(fin, fo, chain, remap, remap_flag=True, new_colnames=[]):
 
     
         #Convert the probe coordinates
-        cmd = ['./liftOver' , './tmp/probes.bed' , chain , './tmp/probes_new.bed' ,
+        cmd = [liftover_path , './tmp/probes.bed' , chain , './tmp/probes_new.bed' ,
             './tmp/probes.unmapped']
         return_info = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if return_info.returncode != 0 :
@@ -578,7 +581,7 @@ def convertProbes(fin, fo, chain, remap, remap_flag=True, new_colnames=[]):
         #restore column names
         if len(new_colnames) > 0:
             df_new.rename(columns={'probe_id':new_colnames[0], 'chromosome':new_colnames[1],
-                                   'position':new_colnames[2]}, inpace=True)
+                                   'position':new_colnames[2]}, inplace=True)
         else:
             df_new.columns = original_colnames
         
@@ -607,30 +610,29 @@ def convertProbes(fin, fo, chain, remap, remap_flag=True, new_colnames=[]):
 ##########################################################################
 
 @click.command()
-@click.option('-i', '--input_dir', help='The direcotry to start processing.')
-@click.option('-o', '--output_dir', help='The direcotry to write new files.')
-#@click.option('-g', '--genome_editions', type=click.Choice(['18to19', '18to38']), help='The genome editions of liftover.')
+@click.option('-i', '--input_dir', help='The directory to start processing.')
+@click.option('-o', '--output_dir', help='The directory to write new files.')
 @click.option('-c', '--chain_file', help='Specify the chain file name.')
-@click.option('--clean', is_flag=True, help='Clean up log files.')
-@click.option('-t', '--test_mode', type=click.IntRange(1,1000), help='Only process a limited number of files.')
-@click.option('-f', '--file_indexing', is_flag=True, help='Only generate the index file.')
 @click.option('-si', '--segment_input_file', help='Specify the segment input file name.')
 @click.option('-so', '--segment_output_file', help='Specify the segment output file name.')
 @click.option('-pi', '--probe_input_file', help='Specify the probe input file name.')
 @click.option('-po', '--probe_output_file', help='Specify the probe output file name.')
-@click.option('--step_size', 'step_size_usr', default=400, help='The step size of remapping (in bases, default:400).')
-@click.option('--range', 'search_range', default=10, help='The range of remapping search (in kilo bases, defualt:10).')
-@click.option('-x', '--index_file', type=click.File('r'), help='Specify an index file cotaining file paths.')
+@click.option('-l', '--liftover', 'liftover_path_usr', type=str, help='Specify the location of the UCSC liftover program.')
+@click.option('-t', '--test_mode', type=int, help='Only process a limited number of files.')
+@click.option('-f', '--file_indexing', is_flag=True, help='Only generate the index file.')
+@click.option('-x', '--index_file', type=click.File('r'), help='Specify an index file containing file paths.')
 @click.option('-r', '--remap_file', type=click.File('r'), help='Specify an remapping list file.')
+@click.option('--step_size', 'step_size_usr', default=400, help='The step size of remapping (in bases, default:400).')
+@click.option('--range', 'search_range', default=10, help='The range of remapping search (in kilo bases, default:10).')
 @click.option('--no_remapping', is_flag=True, help='No remapping, only original liftover.')
 @click.option('--new_segment_header', nargs=4, type=str, help='Specify 4 new column names for new segment files.' )
 @click.option('--new_probe_header', nargs=3, type=str, help='Specify 3 new column names for new probe files.')
-@click.option('--resume', 'resume_files', nargs=2, type=str, help='Specify a index file and a progress file to resume \
-              an interrupted job.')
+@click.option('--resume', 'resume_files', nargs=2, type=str, help='Specify a index file and a progress file to resume an interrupted job.')
+@click.option('--clean', is_flag=True, help='Clean up log files.')
+
 def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segment_input_file, segment_output_file, 
         probe_input_file, probe_output_file, step_size_usr, search_range, index_file, remap_file, no_remapping,
-        new_segment_header, new_probe_header, resume_files):
-
+        new_segment_header, new_probe_header, resume_files, liftover_path_usr):
 
 
     test_counter = 0
@@ -642,6 +644,15 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
             if os.path.isfile(path):
                 os.remove(path)
         sys.exit('Log files cleaned up.')
+
+
+    # Check if the liftOver program exists
+    if liftover_path_usr:
+        global liftover_path
+        liftover_path = liftover_path_usr
+
+    if not os.path.isfile(liftover_path):
+        sys.exit('Can not find the UCSC liftover prgram at {}'.format(liftover_path))
 
     # Check params
 #    if ((segment_input_file == None and segment_output_file !=None) or \
@@ -663,16 +674,16 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
             seg_pattern = re.compile(segment_input_file)
         except re.error:
             sys.exit('{} is not a valid regular expression.'.format(segment_input_file))
-        if segment_output_file == None:
-            segment_output_file = segment_input_file
+        # if segment_output_file == None:
+        #     segment_output_file = segment_input_file
     
     if probe_input_file:
         try:
             pro_pattern = re.compile(probe_input_file)
         except re.error:
             sys.exit('{} is not a valid regular expression.'.format(probe_input_file))
-        if segment_output_file == None:
-            probe_output_file = probe_input_file  
+        # if probe_output_file == None:
+        #     probe_output_file = probe_input_file  
     
 
 
@@ -783,6 +794,8 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
             for line in fi:
                 resume_progress.append(line.strip())
         file_list = list(set(resume_index) - set(resume_progress))
+        print('Resume from previous interruption, {} files processed, {} files to go.'.format(
+                len(resume_progress), len(resume_index)-len(resume_progress)))
 
 
     elif index_file:
@@ -849,6 +862,8 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
     #     print('Remapped positions detected, recovered from ./logs/remapped.log')
 
     if remap_file:
+        if len(next(remap_file).split('\t')) != 4:
+            sys.exit('Wrong remap file.')
         for line in remap_file:
             line = line.strip().split('\t')
             key = line[0]
@@ -887,7 +902,9 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
             
             # lift over
 #            if os.path.basename(f) == segment_input_file:
-            if (segment_input_file !=None) and  (seg_pattern.match(os.path.basename(f))):
+            if ((segment_input_file !=None) or (index_file != None)) and  (seg_pattern.match(os.path.basename(f))):
+                if segment_output_file == None:
+                    segment_output_file = seg_pattern.match(os.path.basename(f)).group(0)
                 segment_out_path = os.path.join(output_dir, rel_path, segment_output_file)
                 code = convertSegments(f, segment_out_path, chain_file,remapped_list, 
                                        remap_flag, new_segment_header)
@@ -896,7 +913,9 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
                 else:
                     seg_fail_counter += 1
 #            elif os.path.basename(f) == probe_input_file:
-            elif (probe_input_file !=None) and (pro_pattern.match(os.path.basename(f))):
+            elif ((probe_input_file !=None) or (index_file !=None )) and (pro_pattern.match(os.path.basename(f))):
+                if probe_output_file == None:
+                    probe_output_file = pro_pattern.match(os.path.basename(f)).group(0)
                 probe_out_path = os.path.join(output_dir, rel_path, probe_output_file)
                 code = convertProbes(f, probe_out_path, chain_file, remapped_list, 
                                      remap_flag, new_probe_header)
