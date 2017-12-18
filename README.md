@@ -1,5 +1,5 @@
 # segmentLiftover
-Converting genome coordinates between different genome assemblies is a common task in bioinformatics. Services and tools such as UCSC Liftover, NCBI Remap and CrossMap are available to perform conversion. When converting a genome assembly, all tools will break the original segment into a few smaller segments, if the segment is not continuous anymore in the new genome assembly. However, in some circumstances such as copy number studies, the integrity of the segment needs to be kept.
+Converting genome coordinates between different genome assemblies is a common task in bioinformatics. Services and tools such as UCSC Liftover, NCBI Remap and CrossMap are available to perform such conversion. When converting a segment, all tools will break the segment into a few smaller segments, if the segment is not continuous anymore in the new assembly. However, in some circumstances such as copy number studies, the integrity of the segment needs to be kept.
 
 The segmentLiftover is a python program that can convert segments between genome assemblies without breaking them apart. Furthermore, it also tries to re-convert by approximation when precise conversion fails.
 
@@ -22,6 +22,7 @@ Please note, Liftover is only free for non-commercial use. Despite the inconveni
 ## How to install
 
 ## How to use
+See the [maunal](https://github.com/baudisgroup/segment-liftover/blob/master/manual.md) for details.
 
 ### Quick start
 Typical usage:
@@ -147,12 +148,13 @@ You can get other chain files [here](http://hgdownload.cse.ucsc.edu/downloads.ht
 - Output files can be renamed with ```-so, --segment_output_file TEXT``` or ```-po, --probe_output_file TEXT```
 
 ### Log files
-- ./logs/filelist.log    The indexing file from traversing input_dir.
-
-- ./logs/liftover.log    The main log file, keeps records for all the works done and errors encountered.
-- ./logs/progress.log    A list of successfully processed files.
-- ./logs/unmapped.log    A list of all positions that could not be lifted and re-converted.
-- ./logs/remapped.log    A list of all the approximated conversion (when LiftOver fails).
+```
+./logs/filelist.log    The indexing file from traversing input_dir.
+./logs/liftover.log    The main log file, keeps records for all the works done and errors encountered.
+./logs/progress.log    A list of successfully processed files.
+./logs/unmapped.log    A list of all positions that could not be lifted and re-converted.
+./logs/remapped.log    A list of all the approximated conversion (when LiftOver fails).
+```
 
 ### Overwriting behaviour
 The script **WILL overwrite ```output_dir```**
@@ -176,6 +178,10 @@ After each run, a **remapped.log** file can be found in **./logs/**.
 
 ### Specify parameters of approximated mapping
 With ```--step_size``` and ```--range```, you can control the resolution and scope of searching for the closest liftable position when a position can not be lifted. The default values are *500* (base) and *10* (kilo-bases)
+
+### Choose good parameters
+
+### Resume from interruption
 
 ### Parallel running
 The simplest way is to first generate a file containing files to process, split it into serval files, than use **index_file** option to start multiple sessions.
