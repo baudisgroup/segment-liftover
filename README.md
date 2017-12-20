@@ -13,11 +13,13 @@ Key features:
 - work for both segment and probe data
 
 ### Program dependency
-The segment_liftover depends on the UCSC Liftover program to work.You can find it [here](https://genome-store.ucsc.edu/).
+The segment_liftover depends on the UCSC Liftover program to work. You can find it [here](https://genome-store.ucsc.edu/).
 Please note, Liftover is only free for non-commercial use. Despite the inconvenience of licensing, Liftover offers some very convenient features:
 - it is a stand-along command-line tool
 - it can convert assemblies of any species, even between species
 - it runs locally and does not require network
+
+**Important: put the ```liftOver``` in your working direcotry, or use -l to specify its location.**
 
 ## How to install
 The easies way is to install through pip:
