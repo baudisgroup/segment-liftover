@@ -62,14 +62,14 @@ Typical usage:
 
 ::
 
-    >python3 segment_liftover.py -i /Volumes/data/hg18/ -o /Volumes/data/hg19/ -c hg18ToHg19 -si segments.tsv -so seg.tsv
+    >segment_liftover -i /Volumes/data/hg18/ -o /Volumes/data/hg19/ -c hg18ToHg19 -si segments.tsv -so seg.tsv
 
 General Usage
 ~~~~~~~~~~~~~
 
 ::
 
-    Usage: segment_liftover.py [OPTIONS]
+    Usage: segment_liftover [OPTIONS]
 
     Options:
       -i, --input_dir TEXT            The directory to start processing.
@@ -115,7 +115,7 @@ source directory:
 
 ::
 
-    ./segment_liftover.py       The python script.
+    ./segmentLiftover.py        The python script.
     ./chains/                   Home of the chain files.
 
 working directory:
@@ -124,7 +124,7 @@ working directory:
 
     ./liftOver             Put the UCSC LiftOver program here.
     ./logs/                Will show up after running the script once. Home of all log files.
-    ./tmp/                 For temporary files during liftover.
+    ./tmp/                 Will show up after running once. For temporary files during liftover.
 
 Start with your input file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
