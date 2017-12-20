@@ -1,4 +1,4 @@
-#segment_liftover Manual
+# segment_liftover Manual
 
 segment_liftover is a Python tool for converting segments between genome assemblies without break them apart. See the main [README](https://github.com/baudisgroup/segment-liftover/blob/master/README.md) for introduction and installation.
 
