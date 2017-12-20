@@ -17,7 +17,7 @@ Options:
   -po, --probe_output_file TEXT   Specify the probe output file name.
   -l, --liftover TEXT             Specify the location of the UCSC liftover
                                   program.
-  -t, --test_mode INTEGER RANGE   Only process a limited number of files.
+  -t, --test_mode INTEGER         Only process a limited number of files.
   -f, --file_indexing             Only generate the index file.
   -x, --index_file FILENAME       Specify an index file containing file paths.
   -r, --remap_file FILENAME       Specify an remapping list file.
