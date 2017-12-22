@@ -93,7 +93,7 @@ source directory:
 
 ```
 ./segmentLiftover.py		The python script.
-./chains/   Home of the chain files.
+./chains/               Home of the chain files.
 ```
 
 working directory:
@@ -204,5 +204,5 @@ With ```--step_size``` and ```--range```, you can control the resolution and sco
 
 ### Resume from interruption
 
-### Parallel running
+### Parallel processing
 The simplest way is to first generate a file containing files to process, split it into serval files, than use the **index_file** option to start multiple sessions.
