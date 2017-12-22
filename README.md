@@ -92,7 +92,7 @@ Required options are:
 source directory:
 
 ```
-./segmentLiftover.py		The python script.
+./segmentLiftover.py    The python script.
 ./chains/               Home of the chain files.
 ```
 
