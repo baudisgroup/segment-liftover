@@ -1,25 +1,25 @@
 # segment_liftover
-Converting genome coordinates between different genome assemblies is a common task in bioinformatics. Services and tools such as UCSC Liftover, NCBI Remap and CrossMap are available to perform such conversion. When converting a segment, all tools will break the segment into a few smaller segments, if the segment is not continuous anymore in the new assembly. However, in some circumstances such as copy number studies, the integrity of the segment needs to be kept.
+Converting genome coordinates between different genome assemblies is a common task in bioinformatics. Services and tools such as UCSC Liftover, NCBI Remap and CrossMap are available to perform such conversion.
 
-The segment_liftover is a python program that can convert segments between genome assemblies without breaking them apart. Furthermore, it also tries to re-convert by approximation when precise conversion fails.
+When converting a genomic segment, those remapping tools will break the segment into smaller parts if the segment is not continuous in the new assembly. However, in some circumstances such as copy number analyses, where the quantitative representation of a genomic rance takes precedence over base-specific representation, the integrity of a single segment needs to be kept.
+
+*segment_liftover* is a Python program that can convert segments between genome assemblies, without breaking them apart. Part of th efunctionaliy is based on re-conversion by locus approximation, in instances where a precise conversion of genomic positions fails.
 
 Key features:
-- convert segments in whole
-- do approximate conversion when direct conversion fails
-- batch process any number of files
+- converts contiguous segments
+- performs approximate conversion when direct conversion fails
+- batch processing of any number of files
 - automatic folder traversal and file discovery
 - detailed logs
-- resume from interruption
-- work for both segment and probe data
+- resuming from interruption
+- suitable for both segment (i.e. start => end) and probe (i.e., single position) data
 
 ### Program dependency
-The segment_liftover depends on the UCSC Liftover program to work. You can find it [here](https://genome-store.ucsc.edu/).
-Please note, Liftover is only free for non-commercial use. Despite the inconvenience of licensing, Liftover offers some very convenient features:
-- it is a stand-along command-line tool
+The segment_liftover depends on the *UCSC Liftover program*, which can be found [here](https://genome-store.ucsc.edu/).
+Please note that the UCSC Liftover is only free for non-commercial use. Despite the inconvenience of licensing, Liftover offers some very convenient features:
+- it is a stand-alone command-line tool
 - it can convert assemblies of any species, even between species
-- it runs locally and does not require network
-
-**Important: put the ```liftOver``` in your working direcotry, or use -l to specify its location.**
+- it runs locally and does not require network access
 
 ## How to install
 The easies way is to install through pip:
@@ -34,6 +34,7 @@ Another way is to copy ```segment_liftover/segmentLiftover.py``` and ```segment_
 ```
 python3 segmentLiftover.py --help
 ```
+**Important: put the ```liftOver``` in your working direcotry, or use -l to specify its location.**
 
 
 ## How to use
@@ -103,9 +104,9 @@ working directory:
 ```
 
 ### Start with your input file
-segment_liftover is designed to process a large number of files in one run. 
+segment_liftover is designed to process a large number of files in one run.
 
-- It requires **_an input directory_**, and will traverse through all subfolders to index all files that matching **_the input file name_**. 
+- It requires **_an input directory_**, and will traverse through all subfolders to index all files that matching **_the input file name_**.
 - It requires **_an output directory_**, and will keep the original folder structure in the output folder.
 - Segment and probe files are treated differently, therefore, you need to use different options to pass the input file name.
 - You can also create a list of input files to start, please see [manual](https://github.com/baudisgroup/segment-liftover/blob/master/manual.md) for more details.
