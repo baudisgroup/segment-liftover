@@ -3,7 +3,7 @@ Converting genome coordinates between different genome assemblies is a common ta
 
 When converting a genomic segment, those remapping tools will break the segment into smaller parts if the segment is not continuous in the new assembly. However, in some circumstances such as copy number analyses, where the quantitative representation of a genomic rance takes precedence over base-specific representation, the integrity of a single segment needs to be kept.
 
-*segment_liftover* is a Python program that can convert segments between genome assemblies, without breaking them apart. Part of th efunctionaliy is based on re-conversion by locus approximation, in instances where a precise conversion of genomic positions fails.
+*segment_liftover* is a Python program that can convert segments between genome assemblies, without breaking them apart. Part of its functionaliy is based on re-conversion by locus approximation, in instances where a precise conversion of genomic positions fails.
 
 Key features:
 - converts contiguous segments
@@ -22,19 +22,20 @@ Please note that the UCSC Liftover is only free for non-commercial use. Despite 
 - it runs locally and does not require network access
 
 ## How to install
-The easies way is to install through pip:
+The easiest way is to install through pip:
 
 ```
 pip install segment_liftover
 segment_liftover --help
 ```
 
-Another way is to copy ```segment_liftover/segmentLiftover.py``` and ```segment_liftover/chains/*``` from [github](https://github.com/baudisgroup/segment-liftover). Dependencies need to be installed manually.
+Another option is to copy ```segment_liftover/segmentLiftover.py``` and ```segment_liftover/chains/*``` from [github](https://github.com/baudisgroup/segment-liftover). Dependencies need to be installed manually.
 
 ```
 python3 segmentLiftover.py --help
 ```
-**Important: put the ```liftOver``` in your working direcotry, or use -l to specify its location.**
+
+**Important: Add the UCSC ```liftOver``` program to your working direcotry, or use -l to specify its location.**
 
 
 ## How to use
@@ -92,7 +93,7 @@ source directory:
 
 ```
 ./segmentLiftover.py		The python script.
-./chains/					Home of the chain files.
+./chains/					      Home of the chain files.
 ```
 
 working directory:
