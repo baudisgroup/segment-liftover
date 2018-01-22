@@ -1,39 +1,41 @@
 # segment_liftover
-Converting genome coordinates between different genome assemblies is a common task in bioinformatics. Services and tools such as UCSC Liftover, NCBI Remap and CrossMap are available to perform such conversion. When converting a segment, all tools will break the segment into a few smaller segments, if the segment is not continuous anymore in the new assembly. However, in some circumstances such as copy number studies, the integrity of the segment needs to be kept.
+Converting genome coordinates between different genome assemblies is a common task in bioinformatics. Services and tools such as UCSC Liftover, NCBI Remap and CrossMap are available to perform such conversion.
 
-The segment_liftover is a python program that can convert segments between genome assemblies without breaking them apart. Furthermore, it also tries to re-convert by approximation when precise conversion fails.
+When converting a genomic segment, those remapping tools will break the segment into smaller parts if the segment is not continuous in the new assembly. However, in some circumstances such as copy number analyses, where the quantitative representation of a genomic rance takes precedence over base-specific representation, the integrity of a single segment needs to be kept.
+
+*segment_liftover* is a Python program that can convert segments between genome assemblies, without breaking them apart. Part of its functionaliy is based on re-conversion by locus approximation, in instances where a precise conversion of genomic positions fails.
 
 Key features:
-- convert segments in whole
-- do approximate conversion when direct conversion fails
-- batch process any number of files
+- converts contiguous segments
+- performs approximate conversion when direct conversion fails
+- batch processing of any number of files
 - automatic folder traversal and file discovery
 - detailed logs
-- resume from interruption
-- work for both segment and probe data
+- resuming from interruption
+- suitable for both segment (i.e. start => end) and probe (i.e., single position) data
 
 ### Program dependency
-The segment_liftover depends on the UCSC Liftover program to work. You can find it [here](https://genome-store.ucsc.edu/).
-Please note, Liftover is only free for non-commercial use. Despite the inconvenience of licensing, Liftover offers some very convenient features:
-- it is a stand-along command-line tool
+*segment_liftover* depends on the *UCSC Liftover program*, which can be found [here](https://genome-store.ucsc.edu/).
+Please note that the UCSC Liftover is only free for non-commercial use. Despite the inconvenience of licensing, Liftover offers some very convenient features:
+- it is a stand-alone command-line tool
 - it can convert assemblies of any species, even between species
-- it runs locally and does not require network
-
-**Important: put the ```liftOver``` in your working direcotry, or use -l to specify its location.**
+- it runs locally and does not require network access
 
 ## How to install
-The easies way is to install through pip:
+The easiest way is to install through pip:
 
 ```
 pip install segment_liftover
 segment_liftover --help
 ```
 
-Another way is to copy ```segment_liftover/segmentLiftover.py``` and ```segment_liftover/chains/*``` from [github](https://github.com/baudisgroup/segment-liftover). Dependencies need to be installed manually.
+Another option is to copy ```segment_liftover/segmentLiftover.py``` and ```segment_liftover/chains/*``` from [github](https://github.com/baudisgroup/segment-liftover). Dependencies need to be installed manually.
 
 ```
 python3 segmentLiftover.py --help
 ```
+
+**Important: Add the UCSC ```liftOver``` program to your working direcotry, or use -l to specify its location.**
 
 
 ## How to use
@@ -90,8 +92,8 @@ Required options are:
 source directory:
 
 ```
-./segmentLiftover.py		The python script.
-./chains/					Home of the chain files.
+./segmentLiftover.py    The python script.
+./chains/               Home of the chain files.
 ```
 
 working directory:
@@ -103,21 +105,22 @@ working directory:
 ```
 
 ### Start with your input file
-segment_liftover is designed to process a large number of files in one run. 
 
-- It requires **_an input directory_**, and will traverse through all subfolders to index all files that matching **_the input file name_**. 
-- It requires **_an output directory_**, and will keep the original folder structure in the output folder.
-- Segment and probe files are treated differently, therefore, you need to use different options to pass the input file name.
-- You can also create a list of input files to start, please see [manual](https://github.com/baudisgroup/segment-liftover/blob/master/manual.md) for more details.
-- Regular expression is supported for input names.
+*segment_liftover* is designed to process a large number of files in one run.
+
+- It requires **_an input directory_**, and will traverse through all sub-directories to index all files matching **_the input file name_**.
+- It requires **_an output directory_**, and will keep the original directory structure in the output directory.
+- Segment and probe files are treated differently - therefore, you need to use different options to pass the input file name.
+- You can also create a list of input files to start. Please see [manual](https://github.com/baudisgroup/segment-liftover/blob/master/manual.md) for more details.
+- Regular expressions are supported for input names.
 
 ### Input file format
 Use ```-si filename``` for segment file names. All files should:
 
-- be **tab separated**,
+- be **tab separated**, without quoted values
 - have at least **4** columns as id, chromosome, start and end (names do not matter, order does).
 
-Extra columns will be kept over.
+Extra columns will be copied over.
 
 An example:
 
@@ -132,10 +135,10 @@ GSM378022	3	48603	8994748	0.0544	1469
 
 Use ```-pi filename``` for probe file names. All files should:
 
-- be **tab separated**,
+- be **tab separated**, without quoted values
 - have at least **3** columns as id, chromosome and position (names do not matter, order does).
 
-Extra columns will be kept over.
+Extra columns will be copied over.
 
 An example:
 
@@ -154,17 +157,18 @@ ID_10_9	1	72034	-0.5687
 
 
 ### Chain files
-A chain file is required by the UCSC LiftOver program to convert from one assemble to another, therefore, it is also **required** by segment_liftover.
+A chain file is required by the _UCSC LiftOver_ program to convert from one assembly to another and therefore also **required** by *segment_liftover*.
 
-Common chain files for human are provider by segment_liftover, please check [manual](https://github.com/baudisgroup/segment-liftover/blob/master/manual.md) for details.
+Common chain files for human genome editions (from UCSC) are provider as part of *segment_liftover*. Please check the [manual](https://github.com/baudisgroup/segment-liftover/blob/master/manual.md) for details.
 
-You can get other chain files [here](http://hgdownload.cse.ucsc.edu/downloads.html)
+Other chain files can be accessed [at the UCSC dowload area](http://hgdownload.cse.ucsc.edu/downloads.html)
 
 ### Outputs
-- The file structure of input directory will be kept in output directory
+- The file structure of the input directory will be kept in output directory.
 - Output files can be renamed with ```-so, --segment_output_file TEXT``` or ```-po, --probe_output_file TEXT```
 
 ### Log files
+
 ```
 ./logs/filelist.log    The indexing file from traversing input_dir.
 ./logs/liftover.log    The main log file, keeps records for all the works done and errors encountered.
@@ -176,7 +180,7 @@ You can get other chain files [here](http://hgdownload.cse.ucsc.edu/downloads.ht
 ### Overwriting behaviour
 The script **WILL overwrite ```output_dir```**
 
-### Python dependency
+### Python dependencies
 The script is developed in python3.6
 
 Packages: click6.7, pandas0.20.1
@@ -184,21 +188,21 @@ Packages: click6.7, pandas0.20.1
 ## Advanced use
 
 ### Start from a file
-With the **index_file** option, you can provide a file containing files you want to process. One file name per line and use full path.
+With the **index_file** option, you can provide a file containing files you want to process. One file name per line, using the file's full path.
 
-After each run, a **fileList.log** file can be found in **./logs/** which can be used as quick start for next time.
+After each run, a **fileList.log** file can be found in **./logs/**, which can be used as quick start for next time.
 
 ### Reuse approximated mapping results
-With the **remap_file** option, you can reuse previously generated log file to speed up processing.
+With the **remap_file** option, you can reuse a previously generated log file to speed up processing.
 
 After each run, a **remapped.log** file can be found in **./logs/**.
 
 ### Specify parameters of approximated mapping
-With ```--step_size``` and ```--range```, you can control the resolution and scope of searching for the closest liftable position when a position can not be lifted. The default values are *500* (base) and *10* (kilo-bases)
+With ```--step_size``` and ```--range```, you can control the resolution and scope of searching for the closest liftable position when a position can not be lifted. The default values are *500* (bases) and *10* (kilo-bases)
 
 ### Choose good parameters
 
 ### Resume from interruption
 
-### Parallel running
-The simplest way is to first generate a file containing files to process, split it into serval files, than use **index_file** option to start multiple sessions.
+### Parallel processing
+The simplest way is to first generate a file containing files to process, split it into serval files, than use the **index_file** option to start multiple sessions.
