@@ -651,8 +651,12 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
         global liftover_path
         liftover_path = liftover_path_usr
 
-    if not os.path.isfile(liftover_path):
-        sys.exit('Can not find the UCSC liftover prgram in current direcotry')
+    # if not os.path.isfile(liftover_path):
+    #     sys.exit('Can not find the UCSC liftover program in current direcotry')
+    try:
+        subprocess.run(liftover_path)
+    except Exception as e:
+        sys.exit('UCSC liftover program is not properly configurated: {}'.format(e))
 
     # Check params
 #    if ((segment_input_file == None and segment_output_file !=None) or \
@@ -676,6 +680,8 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
             sys.exit('{} is not a valid regular expression.'.format(segment_input_file))
         # if segment_output_file == None:
         #     segment_output_file = segment_input_file
+    # else:
+    #     seg_pattern = re.compile('')
     
     if probe_input_file:
         try:
@@ -684,7 +690,8 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
             sys.exit('{} is not a valid regular expression.'.format(probe_input_file))
         # if probe_output_file == None:
         #     probe_output_file = probe_input_file  
-    
+    # else:
+    #     pro_pattern = re.compile('')
 
 
 
@@ -804,7 +811,7 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
             # test mode
             if test_mode:
                 test_counter += 1
-                if test_counter > test_mode:
+                if test_counter >= test_mode:
                     break
         print('Index file detected, recovered from {}'.format(index_file.name))
         print('detected {} files.'.format(len(file_list)))
@@ -902,7 +909,8 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
             
             # lift over
 #            if os.path.basename(f) == segment_input_file:
-            if ((segment_input_file !=None) or (index_file != None)) and  (seg_pattern.match(os.path.basename(f))):
+            # if ((segment_input_file !=None) or (index_file != None)) and  (seg_pattern.match(os.path.basename(f))):
+            if (segment_input_file !=None) and  (seg_pattern.match(os.path.basename(f))):
                 if segment_output_file == None:
                     segment_output_file = seg_pattern.match(os.path.basename(f)).group(0)
                 segment_out_path = os.path.join(output_dir, rel_path, segment_output_file)
@@ -913,7 +921,8 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
                 else:
                     seg_fail_counter += 1
 #            elif os.path.basename(f) == probe_input_file:
-            elif ((probe_input_file !=None) or (index_file !=None )) and (pro_pattern.match(os.path.basename(f))):
+            # elif ((probe_input_file !=None) or (index_file !=None )) and (pro_pattern.match(os.path.basename(f))):
+            elif (probe_input_file !=None)  and (pro_pattern.match(os.path.basename(f))):
                 if probe_output_file == None:
                     probe_output_file = pro_pattern.match(os.path.basename(f)).group(0)
                 probe_out_path = os.path.join(output_dir, rel_path, probe_output_file)

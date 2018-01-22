@@ -21,13 +21,16 @@ from interruption - work for both segment and probe data
 Program dependency
 ~~~~~~~~~~~~~~~~~~
 
-The segment_liftover depends on the UCSC Liftover program to work.You
+The segment_liftover depends on the UCSC Liftover program to work. You
 can find it `here <https://genome-store.ucsc.edu/>`__. Please note,
 Liftover is only free for non-commercial use. Despite the inconvenience
 of licensing, Liftover offers some very convenient features: - it is a
 stand-along command-line tool - it can convert assemblies of any
 species, even between species - it runs locally and does not require
 network
+
+**Important: put the ``liftOver`` in your working direcotry, or use -l
+to specify its location.**
 
 How to install
 --------------
@@ -82,7 +85,7 @@ General Usage
       -po, --probe_output_file TEXT   Specify the probe output file name.
       -l, --liftover TEXT             Specify the location of the UCSC liftover
                                       program.
-      -t, --test_mode INTEGER RANGE   Only process a limited number of files.
+      -t, --test_mode INTEGER         Only process a limited number of files.
       -f, --file_indexing             Only generate the index file.
       -x, --index_file FILENAME       Specify an index file containing file paths.
       -r, --remap_file FILENAME       Specify an remapping list file.
