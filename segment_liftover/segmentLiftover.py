@@ -50,10 +50,10 @@ os.makedirs(log_dir, exist_ok=True)
 
 # increamental log names
 log_suffix = ''
-if os.path.isfile('logs/liftover.log'):
+if os.path.isfile('logs/general.log'):
     suf_index = 2
     while True:
-        logfile_name = 'logs/liftover_' + str(suf_index) + '.log'
+        logfile_name = 'logs/general_' + str(suf_index) + '.log'
         if os.path.isfile(logfile_name):
             suf_index += 1
         else:
@@ -63,7 +63,7 @@ if os.path.isfile('logs/liftover.log'):
 
 # system logger 
 logger = logging.getLogger('liftover')
-handler = logging.FileHandler(os.path.join(log_dir, 'liftover{}.log'.format(log_suffix)), mode='w')
+handler = logging.FileHandler(os.path.join(log_dir, 'general{}.log'.format(log_suffix)), mode='w')
 handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
 logger.setLevel(logging.INFO)
 logger.addHandler(handler)
@@ -77,11 +77,11 @@ progress_logger.addHandler(handler)
 
 # unmapped positions logger, records segments that's not properly lifted.
 unmapped_logger = logging.getLogger('unmapped')
-handler = logging.FileHandler(os.path.join(log_dir,'unmapped{}.log'.format(log_suffix)), mode='w')
+handler = logging.FileHandler(os.path.join(log_dir,'unconverted{}.log'.format(log_suffix)), mode='w')
 handler.setFormatter(logging.Formatter('%(message)s'))
 unmapped_logger.setLevel(logging.INFO)
 unmapped_logger.addHandler(handler)
-unmapped_logger.info('{}\t{}\t{}\t{}\t{}\t{}'.format('chromosome','start','end','same_chr','length_ratio','file'))
+unmapped_logger.info('{}\t{}\t{}\t{}\t{}\t{}'.format('chromosome','start','end','same_chr/new_chr','length_ratio/new_pos','file'))
 
 
 ################### stat counters ###################
@@ -166,7 +166,7 @@ def solveUnmappables(fin, chain, remap):
             new_chro = 'NA'
             key = '{}_{}'.format(chro, start)
 
-            # use buffered mapping is possible
+            # use buffered mapping if possible
             if key in remap:
                 new_chro = remap[key][0]
                 new_pos = remap[key][1]
@@ -174,7 +174,7 @@ def solveUnmappables(fin, chain, remap):
                 if flag == 'mapped':
                     counter += 1
                 else:
-                    logger.warning('Failed to remap (cached): ' + str([chro, start, name]))
+                    logger.warning('Failed to convert (cached): ' + str([chro, start, name]))
             # do a stepwise mapping
             else:
                 with open('./tmp/remap.bed', 'w') as f:
@@ -186,9 +186,9 @@ def solveUnmappables(fin, chain, remap):
                 
                 # check running result
                 if return_info.returncode != 0 :
-                    logger.warning('Remapping failed, cmd error: ' + str([chro, start, name]))
+                    logger.warning('Approximate conversion failed, cmd error: ' + str([chro, start, name]))
                 elif os.path.getsize('./tmp/remap_new.bed') == 0 :
-                    logger.warning('Failed to remap (new): ' + str([chro, start, name]))
+                    logger.warning('Failed to convert (new): ' + str([chro, start, name]))
                     remap[key] = [new_chro, new_pos, 'unmapped']
                 # use the first mapping result
                 else:
@@ -221,12 +221,12 @@ def solveUnmappables(fin, chain, remap):
 
             positions.append([new_chro, new_pos, name])
             
-        logger.info('Remapped %i/%i positions.', counter, num_pos)
+        logger.info('Approximate conversion: %i/%i positions.', counter, num_pos)
         return positions
     
     
     except Exception as e:
-        logger.exception('Failure in remapping: %s', fin)
+        logger.exception('Failure in approximate conversion: %s', fin)
         return -1
 
 
@@ -394,14 +394,15 @@ def convertSegments(fin, fo, chain, remap, remap_flag=True, new_colnames = []):
         unmapped = df_mis[(df_mis.start_new == -1) | (df_mis.stop_new == -1)].shape[0]
 #        remapped_seg = remapped_seg + remapped 
         unmapped_seg += unmapped
-        rejected_seg = rejected_seg + df_mis.shape[0] - unmapped
+        rejected = df_mis.shape[0] - unmapped
+        rejected_seg = rejected_seg + rejected
         if remap_flag == True:
             uniqe_remapped = pd.merge(starts_remap, ends_remap, how='outer', on=['name'])
             remapped_seg += uniqe_remapped.shape[0]
         else:
             uniqe_remapped = pd.DataFrame()
-        lifted_seg = lifted_seg + this_total - unmapped - uniqe_remapped.shape[0]
-        
+        #lifted_seg = lifted_seg + this_total - unmapped - uniqe_remapped.shape[0]
+        lifted_seg = lifted_seg + this_total - unmapped - rejected
         #Invoke unmapped logger
         unmapped_logger = logging.getLogger('unmapped')
         #logging unmapped positions
@@ -571,7 +572,7 @@ def convertProbes(fin, fo, chain, remap, remap_flag=True, new_colnames=[]):
         #logging unmapped positions
         for index, row in df_mis.iterrows():
             unmapped_logger.info('{}\t{}\t{}\t{}\t{}\t{}'.format( row['chr_old'],
-                row['position_old'], '-1', row['chr_cmp'], '-1', fin))
+                row['position_old'], '-1', row['chr_new'], row['position_new'], fin))
         
         
         df_new = df_new[~df_new.name.isin(df_mis.name)]
@@ -621,17 +622,17 @@ def convertProbes(fin, fo, chain, remap, remap_flag=True, new_colnames=[]):
 @click.option('-t', '--test_mode', type=int, help='Only process a limited number of files.')
 @click.option('-f', '--file_indexing', is_flag=True, help='Only generate the index file.')
 @click.option('-x', '--index_file', type=click.File('r'), help='Specify an index file containing file paths.')
-@click.option('-r', '--remap_file', type=click.File('r'), help='Specify an remapping list file.')
-@click.option('--step_size', 'step_size_usr', default=400, help='The step size of remapping (in bases, default:400).')
-@click.option('--range', 'search_range', default=10, help='The range of remapping search (in kilo bases, default:10).')
-@click.option('--no_remapping', is_flag=True, help='No remapping, only original liftover.')
+@click.option('-m', '--mapping_file', type=click.File('r'), help='Specify a pre-defined file of position mappings.')
+@click.option('--step_size', 'step_size_usr', default=400, help='The step size of approximate conversion (in bases, default:400).')
+@click.option('--range', 'search_range', default=10, help='The searching range of approximate conversion (in kilo bases, default:10).')
+@click.option('--no_approximate_conversion', is_flag=True, help='Do not perform approximate conversion.')
 @click.option('--new_segment_header', nargs=4, type=str, help='Specify 4 new column names for new segment files.' )
 @click.option('--new_probe_header', nargs=3, type=str, help='Specify 3 new column names for new probe files.')
 @click.option('--resume', 'resume_files', nargs=2, type=str, help='Specify a index file and a progress file to resume an interrupted job.')
 @click.option('--clean', is_flag=True, help='Clean up log files.')
 
 def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segment_input_file, segment_output_file, 
-        probe_input_file, probe_output_file, step_size_usr, search_range, index_file, remap_file, no_remapping,
+        probe_input_file, probe_output_file, step_size_usr, search_range, index_file, mapping_file, no_approximate_conversion,
         new_segment_header, new_probe_header, resume_files, liftover_path_usr):
 
 
@@ -671,7 +672,7 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
     
     #check input & output file 
     if (segment_input_file == None) and (probe_input_file == None):
-        sys.exit('Error: Must specify at least one input file name for semgent or probe.') 
+        sys.exit('Error: Must specify at least one input file name: semgent or probe.') 
         
     if segment_input_file:
         try:
@@ -743,8 +744,8 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
     else:
         sys.exit('range must be greater than 0')
 
-    # convert no_remapping flg
-    remap_flag = not no_remapping
+    # convert no_approximate_conversion flg
+    remap_flag = not no_approximate_conversion
 
 
     #########   Print input options   ############
@@ -761,8 +762,8 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
     print('setp_size: {}'.format(step_size_usr) )
     print('range: {}'.format( search_range ) )
     print('index_file: {}'.format( index_file.name if index_file else index_file ) )
-    print('remap_file: {}'.format( remap_file.name if remap_file else remap_file) )
-    print('no_remapping: {}'.format( no_remapping ))
+    print('mapping_file: {}'.format( mapping_file.name if mapping_file else mapping_file) )
+    print('no_approximate_conversion: {}'.format( no_approximate_conversion ))
     print('new_segment_header: {}'.format( new_segment_header))
     print('new_probe_header: {}'.format( new_probe_header))
     print()
@@ -868,17 +869,17 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
     #             remapped_list[key] = [chro, pos, flag]
     #     print('Remapped positions detected, recovered from ./logs/remapped.log')
 
-    if remap_file:
-        if len(next(remap_file).split('\t')) != 4:
-            sys.exit('Wrong remap file.')
-        for line in remap_file:
+    if mapping_file:
+        if len(next(mapping_file).split('\t')) != 4:
+            sys.exit('Wrong position mapping file.')
+        for line in mapping_file:
             line = line.strip().split('\t')
             key = line[0]
             chro = line[1]
             pos = int(line[2])
             flag = line[3]
             remapped_list[key] = [chro, pos, flag]
-        print('Remapped positions detected, recovered from {}'.format(remap_file.name))
+        print('Position mapping file detected, recovered from {}'.format(mapping_file.name))
 
         
 
@@ -944,20 +945,20 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
 
     # display global counts
     print('Total segments: {}'.format(total_seg))
-    print('Lifted segments: {}'.format(lifted_seg))
-    print('Remapped segments: {}'.format(remapped_seg))
-    print('Rejected segments: {}'.format(rejected_seg))
-    print('Unmapped segments: {}'.format(unmapped_seg))
-    
+    print('- directly converted: {}'.format(lifted_seg))
+    print('- approximately converted: {}'.format(remapped_seg))
+    print('- converted but rejected: {}'.format(rejected_seg))
+    print('- unconvertible: {}'.format(unmapped_seg))
+    print()
     print('Total probes: {}'.format(total_pro))
-    print('Lifted probes: {}'.format(lifted_pro))
-    print('Remapped probes: {}'.format(remapped_pro))
-    print('Rejected probes: {}'.format(rejected_pro))
-    print('Unmapped probes: {}'.format(unmapped_pro))   
+    print('- directly converted: {}'.format(lifted_pro))
+    print('- approximately converted: {}'.format(remapped_pro))
+    print('- converted but rejected: {}'.format(rejected_pro))
+    print('- unconvertible: {}'.format(unmapped_pro))   
 
 
     # Save the remapped_list for reuse
-    with open('./logs/remapped{}.log'.format(log_suffix), 'w') as fo:
+    with open('./logs/approximate_conversion{}.log'.format(log_suffix), 'w') as fo:
         print('{}\t{}\t{}\t{}'.format('name', 'new_chr', 'new_pos', 'result'), file=fo)
         for k,v in remapped_list.items():
             print(k, end='', file=fo)
@@ -966,7 +967,7 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
             print('', file=fo)
     # Remove temp files.
     # subprocess.run('rm *.bed *.unmapped ./tmp/*.*  &>/dev/null', shell=True)
-    subprocess.run('rm tmp/*', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # subprocess.run('rm -rf tmp', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     print('Done! Finished in {}'.format(datetime.now() - startTime))
 
 ##########################################################################
@@ -975,9 +976,13 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
 #
 ##########################################################################
 if __name__ == '__main__':
-   print()
-   cli()
-    
+    try:
+        print()
+        cli()
+    except Exception as e:
+        print(e)
+    finally:
+        subprocess.run('rm -rf tmp', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) 
 # def main():
 #     print()
 #     cli()

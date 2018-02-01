@@ -20,12 +20,13 @@ Options:
   -t, --test_mode INTEGER         Only process a limited number of files.
   -f, --file_indexing             Only generate the index file.
   -x, --index_file FILENAME       Specify an index file containing file paths.
-  -r, --remap_file FILENAME       Specify an remapping list file.
-  --step_size INTEGER             The step size of remapping (in bases,
-                                  default:400).
-  --range INTEGER                 The range of remapping search (in kilo
-                                  bases, default:10).
-  --no_remapping                  No remapping, only original liftover.
+  -m, --mapping_file FILENAME     Specify a pre-defined file of position
+                                  mappings.
+  --step_size INTEGER             The step size of approximate conversion (in
+                                  bases, default:400).
+  --range INTEGER                 The searching range of approximate conversion
+                                  (in kilo bases, default:10).
+  --no_approximate_conversion     Do not perform approximate conversion.
   --new_segment_header TEXT...    Specify 4 new column names for new segment
                                   files.
   --new_probe_header TEXT...      Specify 3 new column names for new probe
@@ -51,7 +52,7 @@ The root directory of all the files that need to be processed. The program will 
 ```
 -o, --output_dir TEXT 
 ```
-Where the converted files should be stored. It keeps the same directory structure as ```input direcotry```. 
+Where the converted files should be stored. It keeps the same directory structure as ```input directory```. 
 
 ### chain file 
 ```
@@ -87,7 +88,7 @@ When specified, the output files will be renamed, otherwise, the input file name
 ```
 -f, --file_indexing
 ```
-Traversing a large or complex directry may take hours to complete. With this option, the program will stop after generating the indexing file which is saved as ```./logs/fileList.log```. This is particularly useful for paralell running.
+Traversing a large or complex directory may take hours to complete. With this option, the program will stop after generating the indexing file which is saved as ```./logs/fileList.log```. This is particularly useful for parallel running.
 
 ### start from an index file
 ```
@@ -97,7 +98,7 @@ Instead of begin with file traversal, which may be unnecessary to repeat, segmen
 
 Each line of the file should be the path of an input file, nothing else should be in this file.
 
-All the required options are still needed to generated the direcotry stucture and distinguish segment/probe files.
+All the required options are still needed to generated the directory structure and distinguish segment/probe files.
 
 ### test mode
 ```
@@ -105,30 +106,30 @@ All the required options are still needed to generated the direcotry stucture an
 ```
 When this option is given, the program will only process a limited number of files. 
 
-### no remapping
+### no approximate conversion
 ```
---no_remapping
+--no_approximate_conversion
 ```
-When this option is given, the program will only use convertion results from Liftovet. No proximal re-convertion.
+When this option is given, the program will only use conversion results from Liftovet. 
 
-### specify a remapping file
+### re-use a mapping file
 ```
--r, --remap_file FILENAME
+-m, --mapping_file FILENAME
 ```
-After each suceessful execution, segment_liftover will generate a log file containing all the re-converted segments and probes at ```./logs/remapped.log```.
+After each successful execution, segment_liftover will generate a log file containing all the re-converted segments and probes in ```./logs/approximate_conversion.log```.
 
-It can be re-used to dramaticly improve the processing time, if the segments/probes are from the same/similar pipeline or platform.
+It can be re-used to dramatically improve the processing time, if the segments/probes are from the same/similar pipeline or platform.
 
 ### step size & range
 ```
 --step_size INTEGER
 --range INTEGER
 ```
-When Liftover fails to convert a segment or probe, segment_liftover will try to re-convert by approximation. The arounding region of the failed postion will be searched, and the closed convertable position will be used as substitute. The distance between two searched positions and the maximam distance of the search are defined by ```step_size``` and ```range```, respectively.
+When Liftover fails to convert a segment or probe, segment_liftover will try to re-convert by approximation. The surrounding region of the failed position will be searched, and the closed convertible position will be used as substitute. The distance between two searched positions and the maximum distance of the search are defined by ```step_size``` and ```range```, respectively.
 
 The default settings is ```step_size = 400```, ```range = 10```. The counting unit is _base_ for ```step_size``` and _kilo bases_ for ```range```.
 
-These options have significant impact on the process time of re-convertion. Read our [publication]() for the detailed discussion of tuning for the best performence.
+These options have significant impact on the process time of re-conversion. In general they should be related to the average distance between adjacent probes of the experiment platform.
 
 ### new header names
 ```

@@ -1,9 +1,11 @@
 # segment_liftover
 Converting genome coordinates between different genome assemblies is a common task in bioinformatics. Services and tools such as UCSC Liftover, NCBI Remap and CrossMap are available to perform such conversion.
 
-When converting a genomic segment, those remapping tools will break the segment into smaller parts if the segment is not continuous in the new assembly. However, in some circumstances such as copy number analyses, where the quantitative representation of a genomic rance takes precedence over base-specific representation, the integrity of a single segment needs to be kept.
+When converting a genomic segment, those conversion tools will break the segment into smaller parts if the segment is not continuous in the new assembly. However, in some circumstances such as copy number analyses, where the quantitative representation of a genomic range takes precedence over base-specific representation, the integrity of a single segment needs to be kept.
 
-*segment_liftover* is a Python program that can convert segments between genome assemblies, without breaking them apart. Part of its functionaliy is based on re-conversion by locus approximation, in instances where a precise conversion of genomic positions fails.
+Moreover, all those tools are designed for single file processing, and offer nothing to facilitate batch processing. But in Bioinformatic studies, it is very often that people need to deal with hundreds and even thousands of files at a time. 
+
+*segment_liftover* is a Python program that can convert segments between genome assemblies, without breaking them apart. Part of its functionality is based on re-conversion by locus approximation, in instances where a precise conversion of genomic positions fails.
 
 Key features:
 - converts contiguous segments
@@ -12,7 +14,7 @@ Key features:
 - automatic folder traversal and file discovery
 - detailed logs
 - resuming from interruption
-- suitable for both segment (i.e. start => end) and probe (i.e., single position) data
+- accept both segment (i.e. start => end) and probe (i.e., single position) data
 
 ### Program dependency
 *segment_liftover* depends on the *UCSC Liftover program*, which can be found [here](https://genome-store.ucsc.edu/).
@@ -35,7 +37,7 @@ Another option is to copy ```segment_liftover/segmentLiftover.py``` and ```segme
 python3 segmentLiftover.py --help
 ```
 
-**Important: Add the UCSC ```liftOver``` program to your working direcotry, or use -l to specify its location.**
+**Important: Add the UCSC ```liftOver``` program to your working directory, or use -l to specify its location.**
 
 
 ## How to use
@@ -65,12 +67,13 @@ Options:
   -t, --test_mode INTEGER         Only process a limited number of files.
   -f, --file_indexing             Only generate the index file.
   -x, --index_file FILENAME       Specify an index file containing file paths.
-  -r, --remap_file FILENAME       Specify an remapping list file.
-  --step_size INTEGER             The step size of remapping (in bases,
-                                  default:400).
-  --range INTEGER                 The range of remapping search (in kilo
-                                  bases, default:10).
-  --no_remapping                  No remapping, only original liftover.
+  -m, --mapping_file FILENAME     Specify a pre-defined file of position
+                                  mappings.
+  --step_size INTEGER             The step size of approximate conversion (in
+                                  bases, default:400).
+  --range INTEGER                 The searching range of approximate conversion
+                                  (in kilo bases, default:10).
+  --no_approximate_conversion     Do not perform approximate conversion.
   --new_segment_header TEXT...    Specify 4 new column names for new segment
                                   files.
   --new_probe_header TEXT...      Specify 3 new column names for new probe
@@ -99,9 +102,9 @@ source directory:
 working directory:
 
 ```
-./liftOver             Put the UCSC LiftOver program here.
+./liftOver             The UCSC LiftOver program.
 ./logs/                Will show up after running the script once. Home of all log files.
-./tmp/                 Will show up after running once. For temporary files during liftover.
+./tmp/                 Will show up during processing.
 ```
 
 ### Start with your input file
@@ -163,19 +166,49 @@ Common chain files for human genome editions (from UCSC) are provider as part of
 
 Other chain files can be accessed [at the UCSC dowload area](http://hgdownload.cse.ucsc.edu/downloads.html)
 
-### Outputs
+### Output files
 - The file structure of the input directory will be kept in output directory.
 - Output files can be renamed with ```-so, --segment_output_file TEXT``` or ```-po, --probe_output_file TEXT```
+
+### Understanding results
+Five different numbers will be reported after the execution. For example:
+
+```
+Total segments:					a count of all segments in all files.
+- directly converted:			conversions by UCSC liftOver.
+- approximately converted:		successful approximate conversions.
+- converted but rejected:		although converted, but failed the quality check.
+- unconvertible:				cannot be converted at all.
+```
+
+### Quality check
+The usefulness of a converted probe or segment will be checked by a few criteria.
+
+For a probe:
+
+- the new chromosome must be the same as the old chromosome.
+
+For a segment:
+
+- the new start position and new end position are on the same chromosome,
+- 0.5 < length(new\_segment)/length(old\_segment) < 2.
+
 
 ### Log files
 
 ```
-./logs/filelist.log    The indexing file from traversing input_dir.
-./logs/liftover.log    The main log file, keeps records for all the works done and errors encountered.
+./logs/fileList.log    The indexing file from traversing input_dir.
+./logs/general.log    The main log file, keeps records for all the works done and errors encountered.
 ./logs/progress.log    A list of successfully processed files.
-./logs/unmapped.log    A list of all positions that could not be lifted and re-converted.
-./logs/remapped.log    A list of all the approximated conversion (when LiftOver fails).
+./logs/unconverted.log    A list of all positions that could not be lifted and re-converted.
+./logs/approximate_conversion.log    A list of all the approximately converted positions (when LiftOver fails).
 ```
+
+If *segment_liftover* does not work as expected, you can check **general.log** for execution details.
+
+If you are interested in unique re-converted or unconverted results, you can check **approximate_conversion.log**.
+
+If you want to get information of rejection or conversion result of a specific file, you can check **unconverted.log**.
 
 ### Overwriting behaviour
 The script **WILL overwrite ```output_dir```**
@@ -190,19 +223,34 @@ Packages: click6.7, pandas0.20.1
 ### Start from a file
 With the **index_file** option, you can provide a file containing files you want to process. One file name per line, using the file's full path.
 
-After each run, a **fileList.log** file can be found in **./logs/**, which can be used as quick start for next time.
+After each run, a **fileList.log** file can be found in **./logs/**, which can be used as quick start for next time. You can also generate a _file list_ using the following command:
 
-### Reuse approximated mapping results
-With the **remap_file** option, you can reuse a previously generated log file to speed up processing.
+```
+>segment_liftover -i /Volumes/data/hg18/ -o /Volumes/data/hg19/ -c hg18ToHg19 -si segments.tsv -x ./myfilelist.txt
+```
 
-After each run, a **remapped.log** file can be found in **./logs/**.
+### Reuse approximate conversion results
+With the **--mapping_file** option, you can reuse a previously generated log file to speed up processing.
 
-### Specify parameters of approximated mapping
-With ```--step_size``` and ```--range```, you can control the resolution and scope of searching for the closest liftable position when a position can not be lifted. The default values are *500* (bases) and *10* (kilo-bases)
+After each run, a **approximate_conversion.log** file can be found in **./logs/**.
 
-### Choose good parameters
+### Specify parameters of approximate conversion
+With ```--step_size``` and ```--range```, you can control the resolution and scope of searching for the closest liftable position when a position can not be lifted. The default values are *500* (bases) and *10* (kilo-bases).
 
+<!--### Choose good parameters
+-->
 ### Resume from interruption
+If the execution of the script is interrupted, it can be resumed using **--resume** as following:
+
+```
+>segment_liftover --resume ./logs/fileList.log ./logs/progress.log -i /Volumes/data/hg18/ -o /Volumes/data/hg19/ -c hg18ToHg19 -si segments.tsv 
+```
 
 ### Parallel processing
-The simplest way is to first generate a file containing files to process, split it into serval files, than use the **index_file** option to start multiple sessions.
+*segment_liftover* does not support multiprocessing directly, but very tasks can be divided into smaller tasks and run parallel with ease.
+
+- First, generate a **fileList** as instructed in *Start from a file* section.
+- Then (optional), shuffle the lines in the **fileList**.
+- Next, split **fileList** into smaller files and put them in separated folders.
+- Finally, run *lift_over* with option **--index_file** in each folder. 
+
