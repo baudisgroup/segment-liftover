@@ -40,6 +40,9 @@ step_size = 500
 # the number positions to search
 steps = 4000
 
+# global beta
+beta = 2
+
 # create a directory for temp files, this dir is hard coded.
 os.makedirs('./tmp', exist_ok=True)
 
@@ -262,7 +265,8 @@ def convertSegments(fin, fo, chain, remap, remap_flag=True, new_colnames = []):
     try:
 
         df = pd.read_table(fin, sep='\t', low_memory=False)
-        
+
+
         # save original column name
         original_colnames = df.columns.values.tolist()
         
@@ -277,8 +281,12 @@ def convertSegments(fin, fo, chain, remap, remap_flag=True, new_colnames = []):
         df['chr'] = 'chr' + df['chromosome'].astype(str)
         df['name'] = df.index
 
+
+
         #Drop NA
         df = df.dropna(axis=0, how='any')
+
+
 
         #Force positions to be integer
         df.start = df.start.astype(int)
@@ -387,7 +395,7 @@ def convertSegments(fin, fo, chain, remap, remap_flag=True, new_colnames = []):
         #Check bad liftovers
         df_mis = df_new[    ((df_new.start_new == -1) | (df_new.stop_new == -1)) |
                             (df_new.chr_cmp == False) | 
-                            ((df_new.pos_cmpRatio < 0.5) | (df_new.pos_cmpRatio > 2))]
+                            ((df_new.pos_cmpRatio < (1/beta) ) | (df_new.pos_cmpRatio > beta))]
 
         # update global counter
         global remapped_seg, rejected_seg, unmapped_seg, lifted_seg
@@ -625,6 +633,7 @@ def convertProbes(fin, fo, chain, remap, remap_flag=True, new_colnames=[]):
 @click.option('-m', '--mapping_file', type=click.File('r'), help='Specify a pre-defined file of position mappings.')
 @click.option('--step_size', 'step_size_usr', default=400, help='The step size of approximate conversion (in bases, default:400).')
 @click.option('--range', 'search_range', default=10, help='The searching range of approximate conversion (in kilo bases, default:10).')
+@click.option('--beta', 'beta_usr', type=click.FLOAT, help='Parameter in quality control.')
 @click.option('--no_approximate_conversion', is_flag=True, help='Do not perform approximate conversion.')
 @click.option('--new_segment_header', nargs=4, type=str, help='Specify 4 new column names for new segment files.' )
 @click.option('--new_probe_header', nargs=3, type=str, help='Specify 3 new column names for new probe files.')
@@ -633,7 +642,7 @@ def convertProbes(fin, fo, chain, remap, remap_flag=True, new_colnames=[]):
 
 def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segment_input_file, segment_output_file, 
         probe_input_file, probe_output_file, step_size_usr, search_range, index_file, mapping_file, no_approximate_conversion,
-        new_segment_header, new_probe_header, resume_files, liftover_path_usr):
+        new_segment_header, new_probe_header, resume_files, liftover_path_usr, beta_usr):
 
 
     test_counter = 0
@@ -651,11 +660,18 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
     if liftover_path_usr:
         global liftover_path
         liftover_path = liftover_path_usr
+        
+    # Check beta value:
+    global beta
+    if beta_usr:
+        beta = beta_usr
+        if beta_usr <=0:
+            sys.exit('Beta must be greater than zero.')
 
     # if not os.path.isfile(liftover_path):
     #     sys.exit('Can not find the UCSC liftover program in current direcotry')
     try:
-        subprocess.run(liftover_path)
+        subprocess.run(liftover_path,stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception as e:
         sys.exit('UCSC liftover program is not properly configurated: {}'.format(e))
 
@@ -761,6 +777,7 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
     print('probe_output_file: {}'.format(probe_output_file) )
     print('setp_size: {}'.format(step_size_usr) )
     print('range: {}'.format( search_range ) )
+    print('beta: {}'.format( beta ))
     print('index_file: {}'.format( index_file.name if index_file else index_file ) )
     print('mapping_file: {}'.format( mapping_file.name if mapping_file else mapping_file) )
     print('no_approximate_conversion: {}'.format( no_approximate_conversion ))

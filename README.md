@@ -8,7 +8,7 @@ Moreover, all those tools are designed for single file processing, and offer not
 *segment_liftover* is a Python program that can convert segments between genome assemblies, without breaking them apart. Part of its functionality is based on re-conversion by locus approximation, in instances where a precise conversion of genomic positions fails.
 
 Key features:
-- converts contiguous segments
+- converts continuous segments
 - performs approximate conversion when direct conversion fails
 - batch processing of any number of files
 - automatic folder traversal and file discovery
