@@ -26,6 +26,7 @@ Options:
                                   bases, default:400).
   --range INTEGER                 The searching range of approximate conversion
                                   (in kilo bases, default:10).
+  --beta FLOAT                    Parameter in quality control.                                
   --no_approximate_conversion     Do not perform approximate conversion.
   --new_segment_header TEXT...    Specify 4 new column names for new segment
                                   files.
@@ -130,6 +131,12 @@ When Liftover fails to convert a segment or probe, segment_liftover will try to 
 The default settings is ```step_size = 400```, ```range = 10```. The counting unit is _base_ for ```step_size``` and _kilo bases_ for ```range```.
 
 These options have significant impact on the process time of re-conversion. In general they should be related to the average distance between adjacent probes of the experiment platform.
+
+### beta 
+```
+--beta FLOAT
+```
+This parameter controls the strictness of one of the quality control condition, the defaut value is 2. Please refer to the paper for more details.
 
 ### new header names
 ```
