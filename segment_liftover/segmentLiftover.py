@@ -277,20 +277,18 @@ def convertSegments(fin, fo, chain, remap, remap_flag=True, new_colnames = []):
         #Save column names for order restore after processing.
         col_names = df.columns
         
-        #Generate new columns for processing
-        df['chr'] = 'chr' + df['chromosome'].astype(str)
-        df['name'] = df.index
-
-
 
         #Drop NA
         df = df.dropna(axis=0, how='any')
-
-
+        df.chromosome = df.chromosome.astype(int)
 
         #Force positions to be integer
         df.start = df.start.astype(int)
         df.stop = df.stop.astype(int)
+
+        #Generate new columns for processing
+        df['chr'] = 'chr' + df['chromosome'].astype(str)
+        df['name'] = df.index
 
         #Filter chromosome names
         df.loc[df.chr == 'chr23', 'chr'] = 'chrX'
@@ -506,15 +504,16 @@ def convertProbes(fin, fo, chain, remap, remap_flag=True, new_colnames=[]):
         col_names = df.columns
         
         
-        #Generate new columns for processing
-        df['chr'] = 'chr' + df['chromosome'].astype(str)
-        df['name'] = df.index
-
         #Drop NA
         df = df.dropna(axis=0, how='any')
+        df.chromosome = df.chromosome.astype(int)
 
         #Force positions to be integer
         df.position = df.position.astype(int)
+
+        #Generate new columns for processing
+        df['chr'] = 'chr' + df['chromosome'].astype(str)
+        df['name'] = df.index
 
         #Filter chromosome names
         df.loc[df.chr == 'chr23', 'chr'] = 'chrX'
@@ -961,17 +960,17 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
 
 
     # display global counts
-    print('Total segments: {}'.format(total_seg))
-    print('- directly converted: {}'.format(lifted_seg))
-    print('- approximately converted: {}'.format(remapped_seg))
-    print('- converted but rejected: {}'.format(rejected_seg))
-    print('- unconvertible: {}'.format(unmapped_seg))
-    print()
-    print('Total probes: {}'.format(total_pro))
-    print('- directly converted: {}'.format(lifted_pro))
-    print('- approximately converted: {}'.format(remapped_pro))
-    print('- converted but rejected: {}'.format(rejected_pro))
-    print('- unconvertible: {}'.format(unmapped_pro))   
+    # print('Total segments: {}'.format(total_seg))
+    # print('- directly converted: {}'.format(lifted_seg))
+    # print('- approximately converted: {}'.format(remapped_seg))
+    # print('- converted but rejected: {}'.format(rejected_seg))
+    # print('- unconvertible: {}'.format(unmapped_seg))
+    # print()
+    # print('Total probes: {}'.format(total_pro))
+    # print('- directly converted: {}'.format(lifted_pro))
+    # print('- approximately converted: {}'.format(remapped_pro))
+    # print('- converted but rejected: {}'.format(rejected_pro))
+    # print('- unconvertible: {}'.format(unmapped_pro))   
 
 
     # Save the remapped_list for reuse
