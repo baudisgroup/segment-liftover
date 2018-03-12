@@ -104,6 +104,7 @@ General Usage
                                       bases, default:400).
       --range INTEGER                 The searching range of approximate conversion
                                       (in kilo bases, default:10).
+      --beta FLOAT                    Parameter in quality control.                            
       --no_approximate_conversion     Do not perform approximate conversion.
       --new_segment_header TEXT...    Specify 4 new column names for new segment
                                       files.
