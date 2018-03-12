@@ -280,6 +280,10 @@ def convertSegments(fin, fo, chain, remap, remap_flag=True, new_colnames = []):
 
         #Drop NA
         df = df.dropna(axis=0, how='any')
+        df.loc[df.chromosome == 'X', 'chromosome'] = '23'
+        df.loc[df.chromosome == 'x', 'chromosome'] = '23'
+        df.loc[df.chromosome == 'Y', 'chromosome'] = '24'
+        df.loc[df.chromosome == 'y', 'chromosome'] = '24'
         df.chromosome = df.chromosome.astype(int)
 
         #Force positions to be integer
@@ -506,6 +510,10 @@ def convertProbes(fin, fo, chain, remap, remap_flag=True, new_colnames=[]):
         
         #Drop NA
         df = df.dropna(axis=0, how='any')
+        df.loc[df.chromosome == 'X', 'chromosome'] = '23'
+        df.loc[df.chromosome == 'x', 'chromosome'] = '23'
+        df.loc[df.chromosome == 'Y', 'chromosome'] = '24'
+        df.loc[df.chromosome == 'y', 'chromosome'] = '24'
         df.chromosome = df.chromosome.astype(int)
 
         #Force positions to be integer
