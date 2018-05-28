@@ -7,6 +7,7 @@ import logging
 import os
 import re
 from datetime import datetime
+from distutils.dir_util import copy_tree
 
 
 
@@ -19,7 +20,9 @@ startTime = datetime.now()
 
 log_dir = 'logs/'
 chain_dir = 'chains/'
-liftover_path = './liftOver'
+examples_dir = 'examples/'
+# assume liftOver is in sys PATH
+liftover_path = 'liftOver'  
 #chain_dir = os.path.abspath('./chains')
 
 # stores remapped positions for fast re-access
@@ -66,21 +69,21 @@ if os.path.isfile('logs/general.log'):
 
 # system logger 
 logger = logging.getLogger('liftover')
-handler = logging.FileHandler(os.path.join(log_dir, 'general{}.log'.format(log_suffix)), mode='w')
+handler = logging.FileHandler(os.path.join(log_dir, 'general{}.log'.format(log_suffix)), mode='w', delay=True)
 handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
 logger.setLevel(logging.INFO)
 logger.addHandler(handler)
 
 # prgress logger, records processed files, used for restore.
 progress_logger = logging.getLogger('progress')
-handler = logging.FileHandler(os.path.join(log_dir,'progress{}.log'.format(log_suffix)), mode='w')
+handler = logging.FileHandler(os.path.join(log_dir,'progress{}.log'.format(log_suffix)), mode='w', delay=True)
 handler.setFormatter(logging.Formatter('%(message)s'))
 progress_logger.setLevel(logging.INFO)
 progress_logger.addHandler(handler)
 
 # unmapped positions logger, records segments that's not properly lifted.
 unmapped_logger = logging.getLogger('unmapped')
-handler = logging.FileHandler(os.path.join(log_dir,'unconverted{}.log'.format(log_suffix)), mode='w')
+handler = logging.FileHandler(os.path.join(log_dir,'unconverted{}.log'.format(log_suffix)), mode='w', delay=True)
 handler.setFormatter(logging.Formatter('%(message)s'))
 unmapped_logger.setLevel(logging.INFO)
 unmapped_logger.addHandler(handler)
@@ -646,10 +649,11 @@ def convertProbes(fin, fo, chain, remap, remap_flag=True, new_colnames=[]):
 @click.option('--new_probe_header', nargs=3, type=str, help='Specify 3 new column names for new probe files.')
 @click.option('--resume', 'resume_files', nargs=2, type=str, help='Specify a index file and a progress file to resume an interrupted job.')
 @click.option('--clean', is_flag=True, help='Clean up log files.')
+@click.option('--demo', help='Copy example files to a user defined direcotry and run a demonstration.')
 
 def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segment_input_file, segment_output_file, 
         probe_input_file, probe_output_file, step_size_usr, search_range, index_file, mapping_file, no_approximate_conversion,
-        new_segment_header, new_probe_header, resume_files, liftover_path_usr, beta_usr):
+        new_segment_header, new_probe_header, resume_files, liftover_path_usr, beta_usr, demo):
 
 
     test_counter = 0
@@ -663,11 +667,14 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
         sys.exit('Log files cleaned up.')
 
 
+
+
+
     # Check if the liftOver program exists
     if liftover_path_usr:
         global liftover_path
         liftover_path = liftover_path_usr
-        
+    
     # Check beta value:
     global beta
     if beta_usr:
@@ -681,6 +688,37 @@ def cli(input_dir, output_dir, chain_file, clean, test_mode, file_indexing, segm
         subprocess.run(liftover_path,stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception as e:
         sys.exit('UCSC liftover program is not properly configurated: {}'.format(e))
+
+
+    # run a demonstration
+    # 1. copy examples files to user defined directory
+    # 2. run with default params
+    if demo:
+
+        # check if user directory exists
+        if os.path.isdir(demo) == False:
+            sys.exit('Error: direcotry {} does not exist.'.format(demo))
+        else:
+            demo_input = os.path.join(os.path.abspath(demo), 'examples', 'inputs')
+
+        # copy files
+        examples_path = os.path.join(os.path.dirname(__file__), examples_dir)
+        copy_tree(examples_path, demo_input, preserve_mode=0)
+        if os.path.isdir(demo_input):
+            print('Copied examples to {}'.format(demo_input))
+        
+        # default params
+        input_dir = demo_input
+        output_dir = os.path.join(os.path.abspath(demo), 'examples', 'outputs')
+        chain_file = 'hg18ToHg38'
+        segment_input_file = 'segments.tsv'
+        segment_output_file = 'segments.tsv'
+        probe_input_file = 'probes.tsv'
+        probe_output_file = 'probes.tsv'
+        print('Running a demonstration...\n')
+
+
+
 
     # Check params
 #    if ((segment_input_file == None and segment_output_file !=None) or \
