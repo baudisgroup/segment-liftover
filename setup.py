@@ -27,7 +27,7 @@ setup(name = 'segment_liftover',
         ],
     python_requires = '>=3.6',
     entry_points = {
-        'console_scripts': ['segment_liftover = segment_liftover.segmentLiftover:cli']
+        'console_scripts': ['segment_liftover = segment_liftover.segmentLiftover:main']
     },
     include_package_data = True
 )

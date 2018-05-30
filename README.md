@@ -41,13 +41,21 @@ python3 segmentLiftover.py --help
 
 
 ## How to use
-See the [maunal](https://github.com/baudisgroup/segment-liftover/blob/master/manual.md) for details.
+See the [manual](https://github.com/baudisgroup/segment-liftover/blob/master/manual.md) for details.
 
 ### Quick start
-Typical usage:
+
 ```
->segment_liftover -i /Volumes/data/hg18/ -o /Volumes/data/hg19/ -c hg18ToHg19 -si segments.tsv -so seg.tsv
+segment_liftover -l ./liftOver -i /Volumes/data/hg18/ -o /Volumes/data/hg19/ -c hg18ToHg19 -si segments.tsv -so seg.tsv
 ```
+
+### Demo mode
+
+```
+segment_liftover -l .liftOver --demo .
+```
+
+This will copy a few example files to the current directory and run a quick conversion with default settings.
 
 ### General Usage
 ```
@@ -71,9 +79,9 @@ Options:
                                   mappings.
   --step_size INTEGER             The step size of approximate conversion (in
                                   bases, default:400).
-  --range INTEGER                 The searching range of approximate conversion
-                                  (in kilo bases, default:10).
-  --beta FLOAT                    Parameter in quality control.                            
+  --range INTEGER                 The searching range of approximate
+                                  conversion (in kilo bases, default:10).
+  --beta FLOAT                    Parameter in quality control.
   --no_approximate_conversion     Do not perform approximate conversion.
   --new_segment_header TEXT...    Specify 4 new column names for new segment
                                   files.
@@ -81,7 +89,10 @@ Options:
                                   files.
   --resume TEXT...                Specify a index file and a progress file to
                                   resume an interrupted job.
-  --clean                         Clean up log files.
+  --demo TEXT                     Copy example files to a user defined
+                                  directory and run a demonstration.
+  --log_path TEXT                 Specify the directory to write logging
+                                  files.
   --help                          Show this message and exit.
 ```
 
@@ -92,21 +103,10 @@ Required options are:
 - ```-c, --chain_file TEXT```
 - either of both of ```-si, --segment_input_file TEXT``` and ```-pi, --probe_input_file TEXT```
 
-### File structure
-source directory:
 
-```
-./segmentLiftover.py    The python script.
-./chains/               Home of the chain files.
-```
+### The liftOver program
 
-working directory:
-
-```
-./liftOver             The UCSC LiftOver program.
-./logs/                Will show up after running the script once. Home of all log files.
-./tmp/                 Will show up during processing.
-```
+By default, *segment_liftover* looks system path for the *UCSC liftOver* program. It can also be manually specified with the ```-l``` option.
 
 ### Start with your input file
 
@@ -159,50 +159,33 @@ ID_9_8	1	62640	0.3516
 ID_10_9	1	72034	-0.5687
 ```
 
+### Chromosome names
+
+Two formats are supported: chr10 or 10.
 
 ### Chain files
-A chain file is required by the _UCSC LiftOver_ program to convert from one assembly to another and therefore also **required** by *segment_liftover*.
+A chain file is required by the _UCSC liftOver_ program to convert from one assembly to another, therefore it's also **required** by *segment_liftover*.
 
 Common chain files for human genome editions (from UCSC) are provider as part of *segment_liftover*. Please check the [manual](https://github.com/baudisgroup/segment-liftover/blob/master/manual.md) for details.
 
-Other chain files can be accessed [at the UCSC dowload area](http://hgdownload.cse.ucsc.edu/downloads.html)
+Other chain files can be accessed [at the UCSC download area](http://hgdownload.cse.ucsc.edu/downloads.html)
 
 ### Output files
 - The file structure of the input directory will be kept in output directory.
 - Output files can be renamed with ```-so, --segment_output_file TEXT``` or ```-po, --probe_output_file TEXT```
 
-### Understanding results
-Five different numbers will be reported after the execution. For example:
-
-```
-Total segments:					a count of all segments in all files.
-- directly converted:			conversions by UCSC liftOver.
-- approximately converted:		successful approximate conversions.
-- converted but rejected:		although converted, but failed the quality check.
-- unconvertible:				cannot be converted at all.
-```
-
-### Quality check
-The usefulness of a converted probe or segment will be checked by a few criteria.
-
-For a probe:
-
-- the new chromosome must be the same as the old chromosome.
-
-For a segment:
-
-- the new start position and new end position are on the same chromosome,
-- 0.5 < length(new\_segment)/length(old\_segment) < 2.
-
 
 ### Log files
 
+By default, a ```log/``` directory is created in the output directory after the conversion.
 ```
+./logs/parameters.log	The command history and parameter settings.
 ./logs/fileList.log    The indexing file from traversing input_dir.
 ./logs/general.log    The main log file, keeps records for all the works done and errors encountered.
 ./logs/progress.log    A list of successfully processed files.
 ./logs/unconverted.log    A list of all positions that could not be lifted and re-converted.
 ./logs/approximate_conversion.log    A list of all the approximately converted positions (when LiftOver fails).
+./logs/failed_files.log		A list of files failed to be converted.
 ```
 
 If *segment_liftover* does not work as expected, you can check **general.log** for execution details.
@@ -211,7 +194,7 @@ If you are interested in unique re-converted or unconverted results, you can che
 
 If you want to get information of rejection or conversion result of a specific file, you can check **unconverted.log**.
 
-### Overwriting behaviour
+### Overwriting behavior
 The script **WILL overwrite ```output_dir```**
 
 ### Python dependencies
