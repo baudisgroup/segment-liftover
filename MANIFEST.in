@@ -1,2 +1,3 @@
 include LICENSE
 recursive-include segment_liftover/chains *
+recursive-include segment_liftover/examples *

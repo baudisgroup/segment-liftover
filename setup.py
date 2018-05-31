@@ -5,7 +5,7 @@ def readme():
         return f.read()
 
 setup(name = 'segment_liftover',
-     version = '0.949',
+     version = '0.951',
      description = 'Convert segments between genomic assemblies in whole.',
      long_description = readme(),
      license = 'MIT',
