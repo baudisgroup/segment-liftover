@@ -231,7 +231,7 @@ def convertSegments(fin, fo, chain, remap, remap_flag=True, new_colnames = []):
 
     try:
 
-        df = pd.read_table(fin, sep='\t', low_memory=False)
+        df = pd.read_table(fin, sep='\t', low_memory=False, keep_default_na=False)
 
 
         # save original column name
@@ -246,7 +246,7 @@ def convertSegments(fin, fo, chain, remap, remap_flag=True, new_colnames = []):
         
 
         #Drop NA
-        df = df.dropna(axis=0, how='any')
+        df = df.dropna(axis=0, how='any', subset=['chromosome', 'start', 'stop'])
         chro_name = str( df.loc[0,'chromosome'] )
         if 'chr' not in chro_name:
             df['chr'] = 'chr' + df['chromosome'].astype(str)
@@ -406,8 +406,8 @@ def convertSegments(fin, fo, chain, remap, remap_flag=True, new_colnames = []):
         
         os.makedirs(os.path.dirname(fo), exist_ok=True)
         # print(fo)
-        df_new.to_csv(fo, sep='\t', index=False, float_format='%.4f') 
-                
+        #df_new.to_csv(fo, sep='\t', index=False, float_format='%.4f') 
+        df_new.to_csv(fo, sep='\t', index=False)         
         logger.info('Finished\n')
         progress_logger = logging.getLogger('progress')
         progress_logger.info(fin)
@@ -465,7 +465,7 @@ def convertProbes(fin, fo, chain, remap, remap_flag=True, new_colnames=[]):
         #df = pd.read_table(fin, sep='\t', header=0, names=col_names )
         
         
-        df = pd.read_table(fin, sep='\t', low_memory=False)
+        df = pd.read_table(fin, sep='\t', low_memory=False, keep_default_na=False)
         if df.columns.size < 4:
             df.insert(0, 'probe_id', 'ID_' + df.index.astype(str))
             #df['probe_id'] = 'ID_' + df.index.astype(str)
@@ -481,7 +481,7 @@ def convertProbes(fin, fo, chain, remap, remap_flag=True, new_colnames=[]):
         
         
         #Drop NA
-        df = df.dropna(axis=0, how='any')
+        df = df.dropna(axis=0, how='any', subset=['chromosome', 'position'])
         chro_name = str( df.loc[0,'chromosome'] )
         if 'chr' not in chro_name:
             df['chr'] = 'chr' + df['chromosome'].astype(str)        
