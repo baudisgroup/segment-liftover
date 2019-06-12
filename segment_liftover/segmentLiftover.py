@@ -959,8 +959,10 @@ def cli(input_dir, output_dir, chain_file, test_mode, file_indexing, segment_inp
             # if ((segment_input_file !=None) or (index_file != None)) and  (seg_pattern.match(os.path.basename(f))):
             if (segment_input_file !=None) and  (seg_pattern.match(os.path.basename(f))):
                 if segment_output_file == None:
-                    segment_output_file = seg_pattern.match(os.path.basename(f)).group(0)
-                segment_out_path = os.path.join(output_dir, rel_path, segment_output_file)
+                    segment_output_file_dynamic = seg_pattern.match(os.path.basename(f)).group(0)
+                    segment_out_path = os.path.join(output_dir, rel_path, segment_output_file_dynamic)
+                else:
+                    segment_out_path = os.path.join(output_dir, rel_path, segment_output_file)
                 code = convertSegments(f, segment_out_path, chain_file,remapped_list, 
                                        remap_flag, new_segment_header)
                 if code == 0:
