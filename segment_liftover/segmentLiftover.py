@@ -407,7 +407,7 @@ def convertSegments(fin, fo, chain, remap, remap_flag=True, new_colnames = []):
         os.makedirs(os.path.dirname(fo), exist_ok=True)
         # print(fo)
         #df_new.to_csv(fo, sep='\t', index=False, float_format='%.4f') 
-        df_new.to_csv(fo, sep='\t', index=False)         
+        df_new.to_csv(fo, sep='\t', index=False, float_format='%.4f')         
         logger.info('Finished\n')
         progress_logger = logging.getLogger('progress')
         progress_logger.info(fin)
