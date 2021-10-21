@@ -46,8 +46,8 @@ The easiest way is to install through pip:
 
 ::
 
-    pip install segment_liftover
-    segment_liftover --help
+   pip install segment_liftover
+   segment_liftover --help
 
 Another option is to copy ``segment_liftover/segmentLiftover.py`` and
 ``segment_liftover/chains/*`` from
@@ -56,7 +56,7 @@ Dependencies need to be installed manually.
 
 ::
 
-    python3 segmentLiftover.py --help
+   python3 segmentLiftover.py --help
 
 **Important: Add the UCSC ``liftOver`` program to your working
 directory, or use -l to specify its location.**
@@ -73,14 +73,14 @@ Quick start
 
 ::
 
-    segment_liftover -l ./liftOver -i /Volumes/data/hg18/ -o /Volumes/data/hg19/ -c hg18ToHg19 -si segments.tsv -so seg.tsv
+   segment_liftover -l ./liftOver -i /Volumes/data/hg18/ -o /Volumes/data/hg19/ -c hg18ToHg19 -si segments.tsv -so seg.tsv
 
 Demo mode
 ~~~~~~~~~
 
 ::
 
-    segment_liftover -l .liftOver --demo .
+   segment_liftover -l .liftOver --demo .
 
 This will copy a few example files to the current directory and run a
 quick conversion with default settings.
@@ -90,41 +90,41 @@ General Usage
 
 ::
 
-    Usage: segment_liftover [OPTIONS]
+   Usage: segment_liftover [OPTIONS]
 
-    Options:
-      -i, --input_dir TEXT            The directory to start processing.
-      -o, --output_dir TEXT           The directory to write new files.
-      -c, --chain_file TEXT           Specify the chain file name.
-      -si, --segment_input_file TEXT  Specify the segment input file name.
-      -so, --segment_output_file TEXT
-                                      Specify the segment output file name.
-      -pi, --probe_input_file TEXT    Specify the probe input file name.
-      -po, --probe_output_file TEXT   Specify the probe output file name.
-      -l, --liftover TEXT             Specify the location of the UCSC liftover
-                                      program.
-      -t, --test_mode INTEGER         Only process a limited number of files.
-      -f, --file_indexing             Only generate the index file.
-      -x, --index_file FILENAME       Specify an index file containing file paths.
-      -m, --mapping_file FILENAME     Specify a pre-defined file of position
-                                      mappings.
-      --step_size INTEGER             The step size of approximate conversion (in
-                                      bases, default:400).
-      --range INTEGER                 The searching range of approximate
-                                      conversion (in kilo bases, default:10).
-      --beta FLOAT                    Parameter in quality control.
-      --no_approximate_conversion     Do not perform approximate conversion.
-      --new_segment_header TEXT...    Specify 4 new column names for new segment
-                                      files.
-      --new_probe_header TEXT...      Specify 3 new column names for new probe
-                                      files.
-      --resume TEXT...                Specify a index file and a progress file to
-                                      resume an interrupted job.
-      --demo TEXT                     Copy example files to a user defined
-                                      directory and run a demonstration.
-      --log_path TEXT                 Specify the directory to write logging
-                                      files.
-      --help                          Show this message and exit.
+   Options:
+     -i, --input_dir TEXT            The directory to start processing.
+     -o, --output_dir TEXT           The directory to write new files.
+     -c, --chain_file TEXT           Specify the chain file name.
+     -si, --segment_input_file TEXT  Specify the segment input file name.
+     -so, --segment_output_file TEXT
+                                     Specify the segment output file name.
+     -pi, --probe_input_file TEXT    Specify the probe input file name.
+     -po, --probe_output_file TEXT   Specify the probe output file name.
+     -l, --liftover TEXT             Specify the location of the UCSC liftover
+                                     program.
+     -t, --test_mode INTEGER         Only process a limited number of files.
+     -f, --file_indexing             Only generate the index file.
+     -x, --index_file FILENAME       Specify an index file containing file paths.
+     -m, --mapping_file FILENAME     Specify a pre-defined file of position
+                                     mappings.
+     --step_size INTEGER             The step size of approximate conversion (in
+                                     bases, default:400).
+     --range INTEGER                 The searching range of approximate
+                                     conversion (in kilo bases, default:10).
+     --beta FLOAT                    Parameter in quality control.
+     --no_approximate_conversion     Do not perform approximate conversion.
+     --new_segment_header TEXT...    Specify 4 new column names for new segment
+                                     files.
+     --new_probe_header TEXT...      Specify 3 new column names for new probe
+                                     files.
+     --resume TEXT...                Specify a index file and a progress file to
+                                     resume an interrupted job.
+     --demo TEXT                     Copy example files to a user defined
+                                     directory and run a demonstration.
+     --log_path TEXT                 Specify the directory to write logging
+                                     files.
+     --help                          Show this message and exit.
 
 Required options are:
 
@@ -146,10 +146,9 @@ Start with your input file
 *segment_liftover* is designed to process a large number of files in one
 run.
 
--  It requires ***an input directory***, and will traverse through all
-   sub-directories to index all files matching ***the input file
-   name***.
--  It requires ***an output directory***, and will keep the original
+-  It requires **an input directory**, and will traverse through all
+   sub-directories to index all files matching **the input file name**.
+-  It requires **an output directory**, and will keep the original
    directory structure in the output directory.
 -  Segment and probe files are treated differently - therefore, you need
    to use different options to pass the input file name.
@@ -173,12 +172,12 @@ An example:
 
 ::
 
-    id  chro    start   stop    value_1 value_2
-    GSM378022   1   775852  143752373   0.025   9992
-    GSM378022   1   143782024   214220966   0.1607  6381
-    GSM378022   2   88585000    144628991   0.0131  4256
-    GSM378022   2   144635510   146290468   0.1432  146
-    GSM378022   3   48603   8994748 0.0544  1469
+   id  chro    start   stop    value_1 value_2
+   GSM378022   1   775852  143752373   0.025   9992
+   GSM378022   1   143782024   214220966   0.1607  6381
+   GSM378022   2   88585000    144628991   0.0131  4256
+   GSM378022   2   144635510   146290468   0.1432  146
+   GSM378022   3   48603   8994748 0.0544  1469
 
 Use ``-pi filename`` for probe file names. All files should:
 
@@ -192,16 +191,16 @@ An example:
 
 ::
 
-    PROBEID CHRO    BASEPOS VALUE
-    ID_2_1  1   51599   -0.6846
-    ID_3_2  1   51672   -0.2546
-    ID_4_3  1   51687   0.0833
-    ID_5_4  1   52016   -0.5201
-    ID_6_5  1   52784   0.1997
-    ID_7_6  1   52801   -0.3800
-    ID_8_7  1   62568   -0.2435
-    ID_9_8  1   62640   0.3516
-    ID_10_9 1   72034   -0.5687
+   PROBEID CHRO    BASEPOS VALUE
+   ID_2_1  1   51599   -0.6846
+   ID_3_2  1   51672   -0.2546
+   ID_4_3  1   51687   0.0833
+   ID_5_4  1   52016   -0.5201
+   ID_6_5  1   52784   0.1997
+   ID_7_6  1   52801   -0.3800
+   ID_8_7  1   62568   -0.2435
+   ID_9_8  1   62640   0.3516
+   ID_10_9 1   72034   -0.5687
 
 Chromosome names
 ~~~~~~~~~~~~~~~~
@@ -239,13 +238,13 @@ after the conversion.
 
 ::
 
-    ./logs/parameters.log   The command history and parameter settings.
-    ./logs/fileList.log    The indexing file from traversing input_dir.
-    ./logs/general.log    The main log file, keeps records for all the works done and errors encountered.
-    ./logs/progress.log    A list of successfully processed files.
-    ./logs/unconverted.log    A list of all positions that could not be lifted and re-converted.
-    ./logs/approximate_conversion.log    A list of all the approximately converted positions (when LiftOver fails).
-    ./logs/failed_files.log     A list of files failed to be converted.
+   ./logs/parameters.log   The command history and parameter settings.
+   ./logs/fileList.log    The indexing file from traversing input_dir.
+   ./logs/general.log    The main log file, keeps records for all the works done and errors encountered.
+   ./logs/progress.log    A list of successfully processed files.
+   ./logs/unconverted.log    A list of all positions that could not be lifted and re-converted.
+   ./logs/approximate_conversion.log    A list of all the approximately converted positions (when LiftOver fails).
+   ./logs/failed_files.log     A list of files failed to be converted.
 
 If *segment_liftover* does not work as expected, you can check
 **general.log** for execution details.
@@ -283,7 +282,7 @@ which can be used as quick start for next time. You can also generate a
 
 ::
 
-    >segment_liftover -i /Volumes/data/hg18/ -o /Volumes/data/hg19/ -c hg18ToHg19 -si segments.tsv -x ./myfilelist.txt
+   >segment_liftover -i /Volumes/data/hg18/ -o /Volumes/data/hg19/ -c hg18ToHg19 -si segments.tsv -x ./myfilelist.txt
 
 Reuse approximate conversion results
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -302,11 +301,6 @@ scope of searching for the closest liftable position when a position can
 not be lifted. The default values are *500* (bases) and *10*
 (kilo-bases).
 
-.. raw:: html
-
-   <!--### Choose good parameters
-   -->
-
 Resume from interruption
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -315,7 +309,7 @@ If the execution of the script is interrupted, it can be resumed using
 
 ::
 
-    >segment_liftover --resume ./logs/fileList.log ./logs/progress.log -i /Volumes/data/hg18/ -o /Volumes/data/hg19/ -c hg18ToHg19 -si segments.tsv 
+   >segment_liftover --resume ./logs/fileList.log ./logs/progress.log -i /Volumes/data/hg18/ -o /Volumes/data/hg19/ -c hg18ToHg19 -si segments.tsv 
 
 Parallel processing
 ~~~~~~~~~~~~~~~~~~~

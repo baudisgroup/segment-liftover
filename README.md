@@ -221,8 +221,6 @@ After each run, a **approximate_conversion.log** file can be found in **./logs/*
 ### Specify parameters of approximate conversion
 With ```--step_size``` and ```--range```, you can control the resolution and scope of searching for the closest liftable position when a position can not be lifted. The default values are *500* (bases) and *10* (kilo-bases).
 
-<!--### Choose good parameters
--->
 ### Resume from interruption
 If the execution of the script is interrupted, it can be resumed using **--resume** as following:
 

@@ -1,14 +1,14 @@
 from setuptools import setup
 
 def readme():
-    with open('README.md') as f:
+    with open('README.rst') as f:
         return f.read()
 
 setup(name = 'segment_liftover',
-     version = '0.955',
+     version = '0.956',
      description = 'Convert segments between genomic assemblies in whole.',
      long_description = readme(),
-     long_description_content_type='text/markdown',
+     # long_description_content_type='text/markdown',
      license = 'MIT',
      url='https://github.com/baudisgroup/segment-liftover',
      author = 'Bo Gao',
@@ -23,7 +23,7 @@ setup(name = 'segment_liftover',
     keywords = 'segment probe genome coordinate liftover',
     packages = ['segment_liftover'],
     install_requires = [
-        'click',
+        'click == 6.7',
         'pandas'
         ],
     python_requires = '>=3.6',
