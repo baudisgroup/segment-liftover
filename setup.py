@@ -24,7 +24,7 @@ setup(name = 'segment_liftover',
     packages = ['segment_liftover'],
     install_requires = [
         'click == 6.7',
-        'pandas'
+        'pandas == 1.1.2'
         ],
     python_requires = '>=3.6',
     entry_points = {
